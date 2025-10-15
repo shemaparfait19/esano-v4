@@ -64,7 +64,7 @@ import {
 import { FamilyTreeApplicationForm } from "@/components/family-tree/application-form";
 import { FamilyTreeSuggestions } from "@/components/dashboard/family-tree-suggestions";
 // import { SubfamilyManager } from "@/components/family-tree/subfamily-manager";
-import { FamilyCodeBadge } from "@/components/family-tree/family-code-badge";
+import FamilyCodeGenerator from "@/components/family-tree/family-code-generator";
 
 export default function FamilyTreePage() {
   const { user, userProfile } = useAuth();
@@ -1326,9 +1326,9 @@ export default function FamilyTreePage() {
               )}
             </div>
             <div className="w-full lg:w-80 xl:w-96 border-t lg:border-t-0 lg:border-l bg-muted/20 p-3 space-y-4 overflow-auto">
-              <FamilyCodeBadge
+              <FamilyCodeGenerator
                 ownerId={ownerIdParam || user?.uid || ""}
-                isHead={!!userProfile?.isFamilyHead}
+                isFamilyHead={!!userProfile?.isFamilyHead}
               />
             </div>
           </div>

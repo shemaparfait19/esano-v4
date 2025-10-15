@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Buffer } from "buffer";
 import { adminDb } from "@/lib/firebase-admin";
 import type { FamilyTreeApplication } from "@/types/firestore";
 
@@ -82,9 +83,7 @@ export async function POST(request: Request) {
       if (nationalIdFile) {
         const fileName = `nationalId_${Date.now()}_${nationalIdFile.name}`;
         const fileBuffer = await nationalIdFile.arrayBuffer();
-        const base64Content = btoa(
-          String.fromCharCode(...new Uint8Array(fileBuffer))
-        );
+        const base64Content = Buffer.from(fileBuffer).toString("base64");
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({
@@ -111,9 +110,7 @@ export async function POST(request: Request) {
           proofOfFamilyFile.name
         }`;
         const fileBuffer = await proofOfFamilyFile.arrayBuffer();
-        const base64Content = btoa(
-          String.fromCharCode(...new Uint8Array(fileBuffer))
-        );
+        const base64Content = Buffer.from(fileBuffer).toString("base64");
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({
@@ -140,9 +137,7 @@ export async function POST(request: Request) {
           guardianConsentFile.name
         }`;
         const fileBuffer = await guardianConsentFile.arrayBuffer();
-        const base64Content = btoa(
-          String.fromCharCode(...new Uint8Array(fileBuffer))
-        );
+        const base64Content = Buffer.from(fileBuffer).toString("base64");
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({

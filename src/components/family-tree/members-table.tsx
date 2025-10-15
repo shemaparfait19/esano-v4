@@ -62,14 +62,46 @@ export function MembersTable({
   }, [edges]);
 
   const groupedByGeneration = useMemo(() => {
+    // If generation missing for many members, infer from edges
+    const shouldInfer = sorted.some((m) => m.generation == null);
+    const inferred: Record<string, number> = {};
+    if (shouldInfer) {
+      // Roots: members with no parents
+      const hasParent = new Set<string>();
+      edges.forEach((e) => {
+        if (e.type === "parent") hasParent.add(e.toId);
+      });
+      const queue: Array<{ id: string; gen: number }> = [];
+      sorted.forEach((m) => {
+        if (!hasParent.has(m.id)) queue.push({ id: m.id, gen: 0 });
+      });
+      // BFS: parent->child increases gen; spouses share gen
+      const visited = new Set<string>();
+      while (queue.length) {
+        const { id, gen } = queue.shift()!;
+        if (visited.has(id)) continue;
+        visited.add(id);
+        inferred[id] = gen;
+        // children
+        (childrenOf[id] || []).forEach((cid) => {
+          if (!visited.has(cid)) queue.push({ id: cid, gen: gen + 1 });
+        });
+        // spouses same gen
+        (spouseOf[id] || []).forEach((sid) => {
+          if (!visited.has(sid)) queue.push({ id: sid, gen });
+        });
+      }
+    }
+
     const groups: Record<number, FamilyMember[]> = {};
     sorted.forEach((m) => {
-      const gen = m.generation ?? 0;
+      const gen =
+        m.generation != null ? (m.generation as number) : inferred[m.id] ?? 0;
       if (!groups[gen]) groups[gen] = [];
       groups[gen].push(m);
     });
     return groups;
-  }, [sorted]);
+  }, [sorted, edges, childrenOf, spouseOf]);
 
   const generations: number[] = Object.keys(groupedByGeneration)
     .map((n) => Number(n))

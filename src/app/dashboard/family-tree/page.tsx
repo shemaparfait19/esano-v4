@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1226,6 +1227,7 @@ export default function FamilyTreePage() {
                           firstName: m.firstName,
                           lastName: m.lastName,
                           fullName: m.fullName,
+                          generation: (m as any).generation,
                           birthDate: m.birthDate,
                           deathDate: m.deathDate,
                           gender: m.gender,
@@ -1411,6 +1413,9 @@ export default function FamilyTreePage() {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Add Family Member</DialogTitle>
+                <p className="sr-only" id="add-member-desc">
+                  Fill in details to add a new family member to your tree.
+                </p>
               </DialogHeader>
 
               <div className="space-y-4">

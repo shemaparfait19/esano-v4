@@ -247,12 +247,22 @@ export async function GET(request: Request) {
       );
     }
 
-    const q = adminDb
-      .collection("familyTreeApplications")
-      .where("userId", "==", userId)
-      .orderBy("createdAt", "desc")
-      .limit(1);
-    const snap = await q.get();
+    let snap;
+    try {
+      const q = adminDb
+        .collection("familyTreeApplications")
+        .where("userId", "==", userId)
+        .orderBy("createdAt", "desc")
+        .limit(1);
+      snap = await q.get();
+    } catch (orderErr) {
+      // Fallback without orderBy in case of index issues
+      const q = adminDb
+        .collection("familyTreeApplications")
+        .where("userId", "==", userId)
+        .limit(1);
+      snap = await q.get();
+    }
     if (snap.empty) {
       return NextResponse.json({ hasApplication: false, status: null });
     }

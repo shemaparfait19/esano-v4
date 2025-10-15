@@ -1413,9 +1413,9 @@ export default function FamilyTreePage() {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Add Family Member</DialogTitle>
-                <p className="sr-only" id="add-member-desc">
+                <DialogDescription>
                   Fill in details to add a new family member to your tree.
-                </p>
+                </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">

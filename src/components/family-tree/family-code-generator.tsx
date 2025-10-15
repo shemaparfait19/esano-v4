@@ -37,6 +37,13 @@ export function FamilyCodeGenerator({
     if (userProfile?.familyName && !familyName) {
       setFamilyName(userProfile.familyName);
     }
+    // Rehydrate last generated code from profile or localStorage
+    if (userProfile?.familyCode && !generatedCode) {
+      setGeneratedCode(userProfile.familyCode);
+    } else if (typeof window !== "undefined" && !generatedCode) {
+      const cached = window.localStorage.getItem("familyCode:last");
+      if (cached) setGeneratedCode(cached);
+    }
   }, [userProfile, familyName]);
 
   const generateFamilyCode = async () => {
@@ -82,6 +89,31 @@ export function FamilyCodeGenerator({
         const code = data.formattedCode || data.familyCode || data.code;
         setGeneratedCode(code);
         onCodeGenerated?.(code);
+        // Persist for rehydration
+        try {
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem("familyCode:last", code);
+          }
+        } catch {}
+        // Best-effort save to user profile
+        try {
+          const uid =
+            ownerId ||
+            userProfile?.uid ||
+            userProfile?.id ||
+            userProfile?.userId;
+          if (uid) {
+            await fetch(`/api/admin/users/${uid}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                displayName: userProfile?.displayName,
+                isFamilyHead: true,
+              }),
+            });
+            // store familyCode field directly under user via client Firestore if available later
+          }
+        } catch {}
         toast({
           title: "Family Code Generated! 🎉",
           description: `Your family code is: ${code}`,

@@ -361,6 +361,21 @@ export default function FamilyTreePage() {
     return () => clearTimeout(t);
   }, [dirty, readonly]);
 
+  // Save on tab/window close if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (dirty && !readonly) {
+        // Attempt a last save without blocking the unload
+        saveFamilyTree();
+        // Optionally show confirmation dialog in some browsers
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty, readonly]);
+
   const loadFamilyTree = async () => {
     const now = Date.now();
     if (now - lastLoadTime < 5000) {
@@ -591,6 +606,10 @@ export default function FamilyTreePage() {
     setShowAddMemberDialog(false);
     setNewMember({});
     setDirty(true);
+    // Save immediately to avoid losing data on quick reloads
+    setTimeout(() => {
+      saveFamilyTree();
+    }, 0);
   };
 
   const handleAddRelationship = () => {
@@ -634,6 +653,10 @@ export default function FamilyTreePage() {
     setShowAddRelationshipDialog(false);
     setNewRelationship({});
     setDirty(true);
+    // Save immediately to avoid losing data on quick reloads
+    setTimeout(() => {
+      saveFamilyTree();
+    }, 0);
   };
 
   const handleNodeClick = (nodeId: string) => {

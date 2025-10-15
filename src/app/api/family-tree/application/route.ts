@@ -252,12 +252,33 @@ export async function GET(request: Request) {
       );
     }
 
-    const q = adminDb
-      .collection("familyTreeApplications")
-      .where("userId", "==", userId)
-      .orderBy("createdAt", "desc")
-      .limit(1);
-    const snap = await q.get();
+    let snap;
+    try {
+      const q = adminDb
+        .collection("familyTreeApplications")
+        .where("userId", "==", userId)
+        .orderBy("createdAt", "desc")
+        .limit(1);
+      snap = await q.get();
+    } catch (e) {
+      // Fallback without orderBy (avoids index errors); pick latest in memory
+      const q = adminDb
+        .collection("familyTreeApplications")
+        .where("userId", "==", userId);
+      const all = await q.get();
+      const docs = all.docs
+        .map((d: any) => ({ id: d.id, ...(d.data() as any) }))
+        .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+      if (docs.length === 0) {
+        return NextResponse.json({ hasApplication: false, status: null });
+      }
+      const app = docs[0];
+      return NextResponse.json({
+        hasApplication: true,
+        status: app.status || null,
+        application: app,
+      });
+    }
     if (snap.empty) {
       return NextResponse.json({ hasApplication: false, status: null });
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import Link from "next/link";
 import type { FamilyMember, FamilyEdge } from "@/types/family-tree";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ interface MembersTableProps {
   edges?: FamilyEdge[];
   onOpen?: (memberId: string) => void;
   onAiSuggest?: () => void;
+  ownerId?: string;
 }
 
 export function MembersTable({
@@ -18,6 +20,7 @@ export function MembersTable({
   edges = [],
   onOpen,
   onAiSuggest,
+  ownerId,
 }: MembersTableProps) {
   const sorted = useMemo(() => {
     const list = [...members];
@@ -201,9 +204,19 @@ export function MembersTable({
                               👑
                             </span>
                           )}
-                          <span className="font-semibold text-gray-900">
-                            {m.fullName}
-                          </span>
+                          {ownerId ? (
+                            <Link
+                              href={`/ancestry/member/${m.id}?ownerId=${ownerId}`}
+                              className="font-semibold text-primary hover:underline"
+                              title={`Open ${m.fullName}`}
+                            >
+                              {m.fullName}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-gray-900">
+                              {m.fullName}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-4 px-4 border-r border-gray-200">

@@ -28,7 +28,7 @@ interface FamilyMember {
 interface FamilyEdge {
   fromId: string;
   toId: string;
-  type: "parent" | "spouse";
+  type: string; // allow extended relationship types
 }
 
 interface MembersTableProps {
@@ -89,6 +89,30 @@ export function MembersTable({
     return map;
   }, [edges]);
 
+  // Siblings/relatives via explicit non-parent/spouse types
+  const siblingsOf = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    const siblingTypes = new Set([
+      "big_brother",
+      "little_brother",
+      "big_sister",
+      "little_sister",
+      "aunt",
+      "uncle",
+      "cousin_big",
+      "cousin_little",
+      "guardian",
+      "other",
+    ]);
+    edges.forEach((e) => {
+      if (siblingTypes.has(e.type as any)) {
+        (map[e.fromId] = map[e.fromId] || []).push(e.toId);
+        (map[e.toId] = map[e.toId] || []).push(e.fromId);
+      }
+    });
+    return map;
+  }, [edges]);
+
   const groupedByGeneration = useMemo(() => {
     const groups: Record<number, FamilyMember[]> = {};
     sorted.forEach((m) => {
@@ -124,7 +148,7 @@ export function MembersTable({
       onView(memberId);
     } else if (ownerId) {
       // Fallback to navigation if onView is not provided
-      window.location.href = `/ancestry/member/${memberId}/view?ownerId=${ownerId}`;
+      window.location.href = `/ancestry/member/${memberId}?ownerId=${ownerId}`;
     }
   };
 

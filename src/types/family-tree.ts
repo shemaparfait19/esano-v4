@@ -3,9 +3,11 @@ export interface FamilyMember {
   fullName: string;
   firstName: string;
   lastName: string;
+  generation?: number; // Generation index (0 = oldest remembered, increasing down)
   x?: number;
   y?: number;
   isHeadOfFamily?: boolean;
+  isDeceased?: boolean;
   xp?: number;
   level?: number;
   // Ancestry & origin

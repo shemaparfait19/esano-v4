@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
+import { MembersTable } from "@/components/family-tree/members-table";
 
 type PageData = {
   id: string;
@@ -100,6 +102,17 @@ export default function AncestryBookPage() {
   const [accessible, setAccessible] = useState<
     Array<{ ownerId: string; label: string; role: "viewer" | "editor" }>
   >([]);
+  const [familyCode, setFamilyCode] = useState("");
+  const [headQuery, setHeadQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<
+    Array<{
+      ownerId: string;
+      headName?: string;
+      ownerName?: string;
+      membersCount?: number;
+    }>
+  >([]);
 
   useEffect(() => {
     let ignore = false;
@@ -151,6 +164,95 @@ export default function AncestryBookPage() {
     setPageIndex(0);
     const snap = await getDoc(doc(db, "familyTrees", targetOwnerId));
     if (snap.exists()) setTree(snap.data() as any as FamilyTree);
+  }
+
+  async function validateFamilyCodeAndLoad() {
+    if (!familyCode.trim()) return;
+    try {
+      setSearching(true);
+      const res = await fetch("/api/family-code/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: familyCode.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invalid code");
+      if (data.generatedBy) {
+        await loadByOwner(data.generatedBy);
+        setOwnerId(data.generatedBy);
+        toast({
+          title: "Family code valid",
+          description: `Opened ${data.familyName || "family"}`,
+        });
+      } else {
+        toast({
+          title: "Valid code",
+          description: "Owner not found",
+          variant: "destructive",
+        });
+      }
+    } catch (e: any) {
+      toast({
+        title: "Invalid code",
+        description: e?.message || "",
+        variant: "destructive",
+      });
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function searchByHead() {
+    if (!headQuery.trim()) return;
+    try {
+      setSearching(true);
+      const q = encodeURIComponent(headQuery.trim());
+      const res = await fetch(`/api/family-tree/search?q=${q}&limit=10`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Search failed");
+      setSearchResults(Array.isArray(data.items) ? data.items : []);
+      if (!Array.isArray(data.items) || data.items.length === 0) {
+        toast({ title: "No matches", description: "Try another name" });
+      }
+    } catch (e: any) {
+      toast({
+        title: "Search failed",
+        description: e?.message || "",
+        variant: "destructive",
+      });
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function requestAccess(
+    targetOwnerId: string,
+    role: "viewer" | "editor"
+  ) {
+    if (!user?.uid) {
+      toast({ title: "Sign in required", description: "Please sign in first" });
+      return;
+    }
+    try {
+      const res = await fetch("/api/family-tree/access-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ownerId: targetOwnerId,
+          requesterId: user.uid,
+          access: role,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to request");
+      toast({ title: "Request sent", description: `Asked for ${role} access` });
+    } catch (e: any) {
+      toast({
+        title: "Request failed",
+        description: e?.message || "",
+        variant: "destructive",
+      });
+    }
   }
 
   const pages: PageData[] = useMemo(() => {
@@ -386,6 +488,111 @@ export default function AncestryBookPage() {
             </div>
           </div>
         </div>
+
+        {/* Search & Access */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3">
+          <Card className="p-3 bg-slate-800/40 border-slate-700">
+            <div className="text-amber-200 text-xs mb-1">
+              Have a family code?
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={familyCode}
+                onChange={(e) => setFamilyCode(e.target.value)}
+                placeholder="Enter family code"
+                className="bg-slate-900/50 border-slate-700 text-amber-100 placeholder:text-amber-300/40"
+              />
+              <Button
+                size="sm"
+                onClick={validateFamilyCodeAndLoad}
+                disabled={!familyCode.trim() || searching}
+              >
+                Open
+              </Button>
+            </div>
+          </Card>
+          <Card className="p-3 bg-slate-800/40 border-slate-700 md:col-span-2">
+            <div className="text-amber-200 text-xs mb-1">
+              Search by family head
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={headQuery}
+                onChange={(e) => setHeadQuery(e.target.value)}
+                placeholder="e.g., John Doe"
+                className="bg-slate-900/50 border-slate-700 text-amber-100 placeholder:text-amber-300/40"
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={searchByHead}
+                disabled={!headQuery.trim() || searching}
+              >
+                Search
+              </Button>
+            </div>
+            {searchResults.length > 0 && (
+              <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                {searchResults.map((r) => (
+                  <div
+                    key={`${r.ownerId}-${r.headName}`}
+                    className="text-amber-100 bg-slate-900/40 border border-slate-700 rounded p-2 flex items-center justify-between"
+                  >
+                    <div className="text-xs">
+                      <div className="font-semibold">
+                        {r.headName || "Family Head"}
+                      </div>
+                      <div className="opacity-70">
+                        Owner: {r.ownerName || r.ownerId}
+                      </div>
+                      <div className="opacity-70">
+                        Members: {r.membersCount ?? "—"}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => loadByOwner(r.ownerId)}
+                      >
+                        Open
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => requestAccess(r.ownerId, "viewer")}
+                      >
+                        Request View
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Read-only Table View */}
+        {tree && Array.isArray((tree as any).members) && (
+          <div className="mt-2">
+            <Card className="p-3 bg-slate-800/30 border-slate-700">
+              <div className="text-amber-200 text-sm mb-2">
+                Family Data (read-only)
+              </div>
+              <MembersTable
+                members={(tree as any).members.map((m: any) => ({
+                  ...m,
+                  notes:
+                    user?.displayName &&
+                    m.fullName
+                      ?.toLowerCase()
+                      .includes(user.displayName.toLowerCase())
+                      ? `${m.notes ? m.notes + "\n" : ""}You are here.`
+                      : m.notes,
+                }))}
+              />
+            </Card>
+          </div>
+        )}
 
         {/* Book Container */}
         <div className="flex items-center justify-center relative">

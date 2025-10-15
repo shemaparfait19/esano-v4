@@ -4,7 +4,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { useFamilyTreeStore } from "@/lib/family-tree-store";
-import { TreeCanvas } from "@/components/family-tree/tree-canvas";
+// import { TreeCanvas } from "@/components/family-tree/tree-canvas";
+import { GenerationForm } from "@/components/family-tree/generation-form";
+import { MembersTable } from "@/components/family-tree/members-table";
+import { MemberDetailDrawer } from "@/components/family-tree/member-detail-drawer";
 import { TreeToolbar } from "@/components/family-tree/tree-toolbar";
 import { NodeEditor } from "@/components/family-tree/node-editor";
 import { FamilyMember, FamilyEdge } from "@/types/family-tree";
@@ -60,7 +63,8 @@ import {
 } from "firebase/firestore";
 import { FamilyTreeApplicationForm } from "@/components/family-tree/application-form";
 import { FamilyTreeSuggestions } from "@/components/dashboard/family-tree-suggestions";
-import { SubfamilyManager } from "@/components/family-tree/subfamily-manager";
+// import { SubfamilyManager } from "@/components/family-tree/subfamily-manager";
+import { FamilyCodeBadge } from "@/components/family-tree/family-code-badge";
 
 export default function FamilyTreePage() {
   const { user, userProfile } = useAuth();
@@ -843,16 +847,7 @@ export default function FamilyTreePage() {
                   <Plus className="h-4 w-4 mr-1.5" />
                   Add Member
                 </Button>
-                <Button
-                  onClick={handleAddRelationship}
-                  variant="outline"
-                  size="sm"
-                  disabled={readonly}
-                  className="whitespace-nowrap"
-                >
-                  <Heart className="h-4 w-4 mr-1.5" />
-                  Add Relationship
-                </Button>
+                {/* Relationship management will be handled via table/editor */}
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
@@ -1213,82 +1208,56 @@ export default function FamilyTreePage() {
 
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             <div className="flex-1 relative" id="tree-viewport">
-              <div className="absolute top-2 left-2 z-10 bg-black/80 text-white text-xs p-2 rounded">
-                Tree: {tree ? "Loaded" : "Not loaded"} | Members:{" "}
-                {tree?.members?.length || 0} | Loading:{" "}
-                {isLoading ? "Yes" : "No"} | Error: {error || "None"}
-              </div>
+              {/* Status badge removed for simplified table UI */}
 
               {/* Mode Toggle Controls */}
-              <div className="absolute top-2 right-2 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    Mode:
-                  </span>
-                  <Button
-                    variant={isEditMode ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      setIsEditMode(true);
-                      setShowViewResult(false);
+              {/* Mode toggle removed for table UI */}
+
+              <div className="w-full h-full flex flex-col gap-3 p-3 overflow-hidden">
+                {!readonly && (
+                  <GenerationForm
+                    members={members as any}
+                    onAddMembers={(newMembers) => {
+                      newMembers.forEach((m) =>
+                        addMember({
+                          firstName: m.firstName,
+                          lastName: m.lastName,
+                          fullName: m.fullName,
+                          birthDate: m.birthDate,
+                          deathDate: m.deathDate,
+                          gender: m.gender,
+                          tags: m.tags || [],
+                          location: m.location,
+                          notes: m.notes,
+                          customFields: {},
+                        })
+                      );
+                      setDirty(true);
                     }}
-                    className="text-xs h-8"
-                  >
-                    ✏️ Edit
-                  </Button>
-                  <Button
-                    variant={!isEditMode ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      setIsEditMode(false);
-                      setShowViewResult(true);
-                    }}
-                    className="text-xs h-8"
-                  >
-                    👁️ View Result
-                  </Button>
-                </div>
-
-                {isEditMode && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    💡 Drag nodes • Double-click to edit
-                  </div>
+                    onSave={saveFamilyTree}
+                  />
                 )}
-
-                {showViewResult && (
-                  <div className="text-xs text-green-600 font-medium mt-1">
-                    ✨ Auto-arranged view
-                  </div>
-                )}
-              </div>
-
-              {tree && tree.members && tree.members.length > 0 ? (
-                <TreeCanvas
-                  onNodeClick={handleNodeClick}
-                  onNodeDoubleClick={handleNodeDoubleClick}
-                  onCanvasClick={handleCanvasClick}
-                  presence={presence}
-                  className="w-full h-full"
-                  isEditMode={isEditMode}
-                  showViewResult={showViewResult}
+                <MembersTable
+                  members={members as any}
+                  onOpen={(id) => setEditingNode(id)}
+                  onAiSuggest={handleAISuggestions}
                 />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold mb-2">
-                      No Family Members
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                      Start building your family tree by adding your first
-                      member.
-                    </p>
-                    <Button onClick={handleAddMember} disabled={readonly}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add First Member
-                    </Button>
-                  </div>
-                </div>
-              )}
+                <MemberDetailDrawer
+                  open={!!editingNode}
+                  onOpenChange={(o) => !o && setEditingNode(null)}
+                  member={
+                    editingNode
+                      ? (useFamilyTreeStore
+                          .getState()
+                          .getMember(editingNode) as any)
+                      : null
+                  }
+                  ownerId={ownerIdParam || user?.uid || ""}
+                  readonly={readonly}
+                  onSave={(mm) => updateMember(mm.id, mm as any)}
+                  onDelete={(id) => removeMember(id)}
+                />
+              </div>
 
               <div className="sm:hidden absolute bottom-4 right-4 flex flex-col gap-2">
                 <Button
@@ -1338,11 +1307,9 @@ export default function FamilyTreePage() {
               )}
             </div>
             <div className="w-full lg:w-80 xl:w-96 border-t lg:border-t-0 lg:border-l bg-muted/20 p-3 space-y-4 overflow-auto">
-              {/* Subfamily management */}
-              <SubfamilyManager
+              <FamilyCodeBadge
                 ownerId={ownerIdParam || user?.uid || ""}
-                members={members}
-                readonly={readonly}
+                isHead={!!userProfile?.isFamilyHead}
               />
             </div>
           </div>

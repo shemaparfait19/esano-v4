@@ -239,6 +239,43 @@ export async function POST(request: Request) {
   }
 }
 
+// GET /api/family-tree/application?userId=...
+// Returns latest application status for the given user
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    if (!userId) {
+      return NextResponse.json(
+        { error: "userId is required" },
+        { status: 400 }
+      );
+    }
+
+    const q = adminDb
+      .collection("familyTreeApplications")
+      .where("userId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .limit(1);
+    const snap = await q.get();
+    if (snap.empty) {
+      return NextResponse.json({ hasApplication: false, status: null });
+    }
+    const doc = snap.docs[0];
+    const app = doc.data() as any;
+    return NextResponse.json({
+      hasApplication: true,
+      status: app.status || null,
+      application: { id: doc.id, ...app },
+    });
+  } catch (e: any) {
+    return NextResponse.json(
+      { error: "Failed to load application", detail: e?.message || "" },
+      { status: 500 }
+    );
+  }
+}
+
 // GET /api/family-tree/application?userId=... - Get user's application status
 export async function GET(request: Request) {
   try {

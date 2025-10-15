@@ -18,11 +18,13 @@ import { toast } from "@/hooks/use-toast";
 
 interface FamilyCodeGeneratorProps {
   userProfile: any;
+  ownerId?: string;
   onCodeGenerated?: (code: string) => void;
 }
 
 export function FamilyCodeGenerator({
   userProfile,
+  ownerId,
   onCodeGenerated,
 }: FamilyCodeGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -65,7 +67,11 @@ export function FamilyCodeGenerator({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: userProfile?.uid || userProfile?.id || userProfile?.userId,
+          userId:
+            ownerId ||
+            userProfile?.uid ||
+            userProfile?.id ||
+            userProfile?.userId,
           familyName: familyName.trim(),
         }),
       });

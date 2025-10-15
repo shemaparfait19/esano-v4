@@ -11,6 +11,7 @@ interface MembersTableProps {
   edges?: FamilyEdge[];
   onOpen?: (memberId: string) => void;
   onAiSuggest?: () => void;
+  ownerId?: string;
 }
 
 export function MembersTable({
@@ -18,6 +19,7 @@ export function MembersTable({
   edges = [],
   onOpen,
   onAiSuggest,
+  ownerId,
 }: MembersTableProps) {
   const [collapsedByGeneration, setCollapsedByGeneration] = useState<
     Record<number, boolean>
@@ -257,7 +259,16 @@ export function MembersTable({
                                   👑
                                 </span>
                               )}
-                              {onOpen ? (
+                              {ownerId ? (
+                                <a
+                                  href={`/dashboard/family-tree?ownerId=${ownerId}&memberId=${m.id}`}
+                                  className="font-semibold text-gray-900 hover:underline"
+                                  onClick={(e) => onOpen?.(m.id)}
+                                  title="Open member details"
+                                >
+                                  {m.fullName}
+                                </a>
+                              ) : onOpen ? (
                                 <button
                                   type="button"
                                   onClick={() => onOpen(m.id)}
@@ -404,7 +415,7 @@ export function MembersTable({
                             )}
                           </td>
                           <td className="py-4 px-4 border-r border-gray-200 max-w-[300px]">
-                            <div className="text-xs text-gray-600 line-clamp-2">
+                            <div className="text-xs text-gray-600 line-clamp-3">
                               {(() => {
                                 const spouses = (spouseOf[m.id] || [])
                                   .map((id) => byId[id]?.firstName)
@@ -415,18 +426,36 @@ export function MembersTable({
                                 const children = (childrenOf[m.id] || [])
                                   .map((id) => byId[id]?.firstName)
                                   .filter(Boolean);
-                                const parts: string[] = [];
+                                const chips: JSX.Element[] = [];
                                 if (spouses.length)
-                                  parts.push(
-                                    `Spouse of ${spouses.join(" & ")}`
+                                  chips.push(
+                                    <span
+                                      key="sp"
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full mr-1"
+                                    >
+                                      ❤️ Spouse of {spouses.join(" & ")}
+                                    </span>
                                   );
                                 if (parents.length)
-                                  parts.push(`Child of ${parents.join(" & ")}`);
-                                if (children.length)
-                                  parts.push(
-                                    `Parent of ${children.join(" & ")}`
+                                  chips.push(
+                                    <span
+                                      key="pa"
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full mr-1"
+                                    >
+                                      🔵 Child of {parents.join(" & ")}
+                                    </span>
                                   );
-                                return parts.join(" · ") || m.notes || "—";
+                                if (children.length)
+                                  chips.push(
+                                    <span
+                                      key="ch"
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full mr-1"
+                                    >
+                                      🟣 Parent of {children.join(" & ")}
+                                    </span>
+                                  );
+                                if (chips.length) return <>{chips}</>;
+                                return m.notes || "—";
                               })()}
                             </div>
                           </td>

@@ -1273,6 +1273,7 @@ export default function FamilyTreePage() {
                   edges={edges as any}
                   onOpen={(id) => setEditingNode(id)}
                   onAiSuggest={handleAISuggestions}
+                  ownerId={ownerIdParam || user?.uid}
                 />
                 <MemberDetailDrawer
                   open={!!editingNode}

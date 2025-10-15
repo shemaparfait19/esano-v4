@@ -107,6 +107,8 @@ export default function FamilyTreePage() {
   const [newRelationship, setNewRelationship] = useState<Partial<FamilyEdge>>(
     {}
   );
+  const [joinCodeInput, setJoinCodeInput] = useState<string>("");
+  const [joiningByCode, setJoiningByCode] = useState<boolean>(false);
   const [presence, setPresence] = useState<
     Array<{
       id: string;
@@ -1330,6 +1332,75 @@ export default function FamilyTreePage() {
                 ownerId={ownerIdParam || user?.uid || ""}
                 isHead={!!userProfile?.isFamilyHead}
               />
+
+              {/* Join by Family Code */}
+              {!ownerIdParam && (
+                <Card className="p-3">
+                  <div className="text-sm font-medium mb-2">
+                    Join by Family Code
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="XXXX-XXXX"
+                      value={joinCodeInput}
+                      onChange={(e) => {
+                        let value = e.target.value
+                          .replace(/[^A-Z0-9]/g, "")
+                          .toUpperCase();
+                        if (value.length > 4) {
+                          value = value.slice(0, 4) + "-" + value.slice(4, 8);
+                        }
+                        setJoinCodeInput(value);
+                      }}
+                      maxLength={9}
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        if (!joinCodeInput.trim()) return;
+                        setJoiningByCode(true);
+                        try {
+                          const res = await fetch("/api/family-code/validate", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ code: joinCodeInput }),
+                          });
+                          const data = await res.json();
+                          if (!res.ok || !data.valid) {
+                            throw new Error(data.error || "Invalid code");
+                          }
+                          const targetOwner: string | undefined =
+                            data.generatedBy;
+                          if (!targetOwner)
+                            throw new Error("Code has no owner");
+                          router.push(
+                            `/dashboard/family-tree?ownerId=${encodeURIComponent(
+                              targetOwner
+                            )}`
+                          );
+                          toast({
+                            title: "Joined",
+                            description: `Opened ${data.familyName}`,
+                          });
+                        } catch (e: any) {
+                          toast({
+                            title: "Failed",
+                            description:
+                              e?.message || "Could not join with this code",
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setJoiningByCode(false);
+                        }
+                      }}
+                      disabled={joiningByCode || !joinCodeInput.trim()}
+                    >
+                      {joiningByCode ? "Checking..." : "Open"}
+                    </Button>
+                  </div>
+                </Card>
+              )}
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import type { FamilyMember, FamilyEdge } from "@/types/family-tree";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,9 @@ export function MembersTable({
   onOpen,
   onAiSuggest,
 }: MembersTableProps) {
+  const [collapsedByGeneration, setCollapsedByGeneration] = useState<
+    Record<number, boolean>
+  >({});
   const sorted = useMemo(() => {
     const list = [...members];
     list.sort((a, b) => (a.generation ?? 0) - (b.generation ?? 0));
@@ -68,8 +71,8 @@ export function MembersTable({
     return groups;
   }, [sorted]);
 
-  const generations = Object.keys(groupedByGeneration)
-    .map(Number)
+  const generations: number[] = Object.keys(groupedByGeneration)
+    .map((n) => Number(n))
     .sort((a, b) => a - b);
 
   const getGenderBadgeColor = (gender?: string) => {
@@ -126,11 +129,27 @@ export function MembersTable({
               )}
 
               <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 px-6 py-4 sticky left-0">
-                <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCollapsedByGeneration(
+                      (prev: Record<number, boolean>) => ({
+                        ...prev,
+                        [gen]: !prev[gen],
+                      })
+                    )
+                  }
+                  className="w-full flex items-center gap-3 text-left"
+                  title={
+                    collapsedByGeneration[gen]
+                      ? "Expand generation"
+                      : "Collapse generation"
+                  }
+                >
                   <div className="bg-gradient-to-br from-green-600 to-emerald-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
                     {gen}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                       Generation {gen}
                     </h3>
@@ -139,183 +158,271 @@ export function MembersTable({
                       {groupedByGeneration[gen].length !== 1 ? "s" : ""}
                     </p>
                   </div>
-                </div>
+                  <span className="text-xs text-gray-600">
+                    {collapsedByGeneration[gen] ? "Show" : "Hide"}
+                  </span>
+                </button>
               </div>
 
-              <table className="w-full text-sm">
-                <thead className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 sticky top-0 z-10">
-                  <tr className="text-left border-b-2 border-green-400">
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Full Name
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Spouse
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Parents
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Children
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Gender
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Birth
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Death
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Location
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Tags
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Relation Summary
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
-                      Status
-                    </th>
-                    <th className="py-3 px-4 font-semibold text-white">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groupedByGeneration[gen].map((m, idx) => (
-                    <tr
-                      key={m.id}
-                      className={`border-b border-gray-200 hover:bg-gradient-to-r hover:from-green-50/50 hover:to-emerald-50/50 transition-all duration-200 ${
-                        idx % 2 === 0 ? "bg-white/50" : "bg-gray-50/30"
-                      }`}
-                    >
-                      <td className="py-4 px-4 border-r border-gray-200">
-                        <div className="flex items-center gap-2">
-                          {m.isHeadOfFamily && (
-                            <span
-                              className="text-yellow-500 text-lg"
-                              title="Head of Family"
-                            >
-                              👑
+              {!collapsedByGeneration[gen] && (
+                <table className="w-full text-sm">
+                  <thead className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 sticky top-0 z-10">
+                    <tr className="text-left border-b-2 border-green-400">
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Full Name
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Spouse
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Parents
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Children
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Gender
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Birth
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Death
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Location
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Tags
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Relation Summary
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
+                        Status
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-white">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {groupedByGeneration[gen].map(
+                      (m: FamilyMember, idx: number) => (
+                        <tr
+                          key={m.id}
+                          className={`border-b border-gray-200 hover:bg-gradient-to-r hover:from-green-50/50 hover:to-emerald-50/50 transition-all duration-200 ${
+                            idx % 2 === 0 ? "bg-white/50" : "bg-gray-50/30"
+                          }`}
+                        >
+                          <td className="py-4 px-4 border-r border-gray-200">
+                            <div className="flex items-center gap-2">
+                              {m.isHeadOfFamily && (
+                                <span
+                                  className="text-yellow-500 text-lg"
+                                  title="Head of Family"
+                                >
+                                  👑
+                                </span>
+                              )}
+                              {onOpen ? (
+                                <button
+                                  type="button"
+                                  onClick={() => onOpen(m.id)}
+                                  className="font-semibold text-gray-900 hover:underline"
+                                  title="Open member details"
+                                >
+                                  {m.fullName}
+                                </button>
+                              ) : (
+                                <span className="font-semibold text-gray-900">
+                                  {m.fullName}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200">
+                            <span className="text-gray-700">
+                              {(spouseOf[m.id] || []).length
+                                ? (spouseOf[m.id] || []).map(
+                                    (id: string, i: number) => (
+                                      <React.Fragment key={id}>
+                                        {i > 0 && ", "}
+                                        {onOpen ? (
+                                          <button
+                                            type="button"
+                                            className="hover:underline"
+                                            onClick={() => onOpen(id)}
+                                            title={`Open ${
+                                              byId[id]?.firstName || id
+                                            }`}
+                                          >
+                                            {byId[id]?.firstName || id}
+                                          </button>
+                                        ) : (
+                                          <span>
+                                            {byId[id]?.firstName || id}
+                                          </span>
+                                        )}
+                                      </React.Fragment>
+                                    )
+                                  )
+                                : "—"}
                             </span>
-                          )}
-                          <span className="font-semibold text-gray-900">
-                            {m.fullName}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200">
-                        <span className="text-gray-700">
-                          {(spouseOf[m.id] || [])
-                            .map((id) => byId[id]?.firstName || id)
-                            .join(", ") || "—"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200">
-                        <span className="text-gray-700">
-                          {(parentsOf[m.id] || [])
-                            .map((id) => byId[id]?.firstName || id)
-                            .join(", ") || "—"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200">
-                        <span className="text-gray-700">
-                          {(childrenOf[m.id] || [])
-                            .map((id) => byId[id]?.firstName || id)
-                            .join(", ") || "—"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200">
-                        {m.gender ? (
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${getGenderBadgeColor(
-                              m.gender
-                            )}`}
-                          >
-                            {m.gender}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
-                        {m.birthDate || "—"}
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
-                        {m.deathDate || (m.isDeceased ? "Yes" : "—")}
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
-                        {m.location || "—"}
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200">
-                        {Array.isArray(m.tags) && m.tags.length ? (
-                          <div className="flex flex-wrap gap-1">
-                            {m.tags.slice(0, 2).map((tag, i) => (
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200">
+                            <span className="text-gray-700">
+                              {(parentsOf[m.id] || []).length
+                                ? (parentsOf[m.id] || []).map(
+                                    (id: string, i: number) => (
+                                      <React.Fragment key={id}>
+                                        {i > 0 && ", "}
+                                        {onOpen ? (
+                                          <button
+                                            type="button"
+                                            className="hover:underline"
+                                            onClick={() => onOpen(id)}
+                                            title={`Open ${
+                                              byId[id]?.firstName || id
+                                            }`}
+                                          >
+                                            {byId[id]?.firstName || id}
+                                          </button>
+                                        ) : (
+                                          <span>
+                                            {byId[id]?.firstName || id}
+                                          </span>
+                                        )}
+                                      </React.Fragment>
+                                    )
+                                  )
+                                : "—"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200">
+                            <span className="text-gray-700">
+                              {(childrenOf[m.id] || []).length
+                                ? (childrenOf[m.id] || []).map(
+                                    (id: string, i: number) => (
+                                      <React.Fragment key={id}>
+                                        {i > 0 && ", "}
+                                        {onOpen ? (
+                                          <button
+                                            type="button"
+                                            className="hover:underline"
+                                            onClick={() => onOpen(id)}
+                                            title={`Open ${
+                                              byId[id]?.firstName || id
+                                            }`}
+                                          >
+                                            {byId[id]?.firstName || id}
+                                          </button>
+                                        ) : (
+                                          <span>
+                                            {byId[id]?.firstName || id}
+                                          </span>
+                                        )}
+                                      </React.Fragment>
+                                    )
+                                  )
+                                : "—"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200">
+                            {m.gender ? (
                               <span
-                                key={i}
-                                className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium"
+                                className={`px-2 py-1 rounded-full text-xs font-semibold ${getGenderBadgeColor(
+                                  m.gender
+                                )}`}
                               >
-                                {tag}
+                                {m.gender}
                               </span>
-                            ))}
-                            {m.tags.length > 2 && (
-                              <span className="text-xs text-gray-500">
-                                +{m.tags.length - 2}
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
+                            {m.birthDate || "—"}
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
+                            {m.deathDate || (m.isDeceased ? "Yes" : "—")}
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
+                            {m.location || "—"}
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200">
+                            {Array.isArray(m.tags) && m.tags.length ? (
+                              <div className="flex flex-wrap gap-1">
+                                {m.tags.slice(0, 2).map((tag, i) => (
+                                  <span
+                                    key={i}
+                                    className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                                {m.tags.length > 2 && (
+                                  <span className="text-xs text-gray-500">
+                                    +{m.tags.length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200 max-w-[300px]">
+                            <div className="text-xs text-gray-600 line-clamp-2">
+                              {(() => {
+                                const spouses = (spouseOf[m.id] || [])
+                                  .map((id) => byId[id]?.firstName)
+                                  .filter(Boolean);
+                                const parents = (parentsOf[m.id] || [])
+                                  .map((id) => byId[id]?.firstName)
+                                  .filter(Boolean);
+                                const children = (childrenOf[m.id] || [])
+                                  .map((id) => byId[id]?.firstName)
+                                  .filter(Boolean);
+                                const parts: string[] = [];
+                                if (spouses.length)
+                                  parts.push(
+                                    `Spouse of ${spouses.join(" & ")}`
+                                  );
+                                if (parents.length)
+                                  parts.push(`Child of ${parents.join(" & ")}`);
+                                if (children.length)
+                                  parts.push(
+                                    `Parent of ${children.join(" & ")}`
+                                  );
+                                return parts.join(" · ") || m.notes || "—";
+                              })()}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 border-r border-gray-200">
+                            {m.isHeadOfFamily && (
+                              <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-white rounded-full text-xs font-bold shadow-md">
+                                HEAD
                               </span>
                             )}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200 max-w-[300px]">
-                        <div className="text-xs text-gray-600 line-clamp-2">
-                          {(() => {
-                            const spouses = (spouseOf[m.id] || [])
-                              .map((id) => byId[id]?.firstName)
-                              .filter(Boolean);
-                            const parents = (parentsOf[m.id] || [])
-                              .map((id) => byId[id]?.firstName)
-                              .filter(Boolean);
-                            const children = (childrenOf[m.id] || [])
-                              .map((id) => byId[id]?.firstName)
-                              .filter(Boolean);
-                            const parts: string[] = [];
-                            if (spouses.length)
-                              parts.push(`Spouse of ${spouses.join(" & ")}`);
-                            if (parents.length)
-                              parts.push(`Child of ${parents.join(" & ")}`);
-                            if (children.length)
-                              parts.push(`Parent of ${children.join(" & ")}`);
-                            return parts.join(" · ") || m.notes || "—";
-                          })()}
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 border-r border-gray-200">
-                        {m.isHeadOfFamily && (
-                          <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-white rounded-full text-xs font-bold shadow-md">
-                            HEAD
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        {onOpen && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => onOpen(m.id)}
-                            className="hover:bg-green-100 hover:text-green-700 font-medium transition-all"
-                          >
-                            Open
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          </td>
+                          <td className="py-4 px-4">
+                            {onOpen && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => onOpen(m.id)}
+                                className="hover:bg-green-100 hover:text-green-700 font-medium transition-all"
+                              >
+                                Open
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
           ))}
         </div>

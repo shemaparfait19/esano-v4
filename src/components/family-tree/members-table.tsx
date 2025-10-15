@@ -81,7 +81,7 @@ export function MembersTable({
 
   return (
     <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6">
+      <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
@@ -99,7 +99,7 @@ export function MembersTable({
               size="lg"
               variant="secondary"
               onClick={onAiSuggest}
-              className="bg-white/90 hover:bg-white text-purple-700 font-semibold shadow-lg hover:shadow-xl transition-all"
+              className="bg-white/90 hover:bg-white text-green-700 font-semibold shadow-lg hover:shadow-xl transition-all"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               AI Suggestions
@@ -125,13 +125,13 @@ export function MembersTable({
                 </div>
               )}
 
-              <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 px-6 py-4 sticky left-0">
+              <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 px-6 py-4 sticky left-0">
                 <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                  <div className="bg-gradient-to-br from-green-600 to-emerald-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
                     {gen}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                       Generation {gen}
                     </h3>
                     <p className="text-sm text-gray-600">
@@ -143,42 +143,42 @@ export function MembersTable({
               </div>
 
               <table className="w-full text-sm">
-                <thead className="bg-gray-50/50 backdrop-blur-sm sticky top-0 z-10">
-                  <tr className="text-left border-b-2 border-indigo-200">
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                <thead className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 sticky top-0 z-10">
+                  <tr className="text-left border-b-2 border-green-400">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Full Name
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Spouse
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Parents
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Children
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Gender
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Birth
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Death
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Location
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Tags
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Relation Summary
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white border-r border-green-400/30">
                       Status
                     </th>
-                    <th className="py-3 px-4 font-semibold text-gray-700">
+                    <th className="py-3 px-4 font-semibold text-white">
                       Actions
                     </th>
                   </tr>
@@ -187,11 +187,11 @@ export function MembersTable({
                   {groupedByGeneration[gen].map((m, idx) => (
                     <tr
                       key={m.id}
-                      className={`border-b border-gray-100 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-200 ${
+                      className={`border-b border-gray-200 hover:bg-gradient-to-r hover:from-green-50/50 hover:to-emerald-50/50 transition-all duration-200 ${
                         idx % 2 === 0 ? "bg-white/50" : "bg-gray-50/30"
                       }`}
                     >
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-r border-gray-200">
                         <div className="flex items-center gap-2">
                           {m.isHeadOfFamily && (
                             <span
@@ -206,28 +206,28 @@ export function MembersTable({
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-r border-gray-200">
                         <span className="text-gray-700">
                           {(spouseOf[m.id] || [])
                             .map((id) => byId[id]?.firstName || id)
                             .join(", ") || "—"}
                         </span>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-r border-gray-200">
                         <span className="text-gray-700">
                           {(parentsOf[m.id] || [])
                             .map((id) => byId[id]?.firstName || id)
                             .join(", ") || "—"}
                         </span>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-r border-gray-200">
                         <span className="text-gray-700">
                           {(childrenOf[m.id] || [])
                             .map((id) => byId[id]?.firstName || id)
                             .join(", ") || "—"}
                         </span>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-r border-gray-200">
                         {m.gender ? (
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-semibold ${getGenderBadgeColor(
@@ -240,22 +240,22 @@ export function MembersTable({
                           <span className="text-gray-400">—</span>
                         )}
                       </td>
-                      <td className="py-4 px-4 text-gray-700">
+                      <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
                         {m.birthDate || "—"}
                       </td>
-                      <td className="py-4 px-4 text-gray-700">
+                      <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
                         {m.deathDate || (m.isDeceased ? "Yes" : "—")}
                       </td>
-                      <td className="py-4 px-4 text-gray-700">
+                      <td className="py-4 px-4 border-r border-gray-200 text-gray-700">
                         {m.location || "—"}
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-r border-gray-200">
                         {Array.isArray(m.tags) && m.tags.length ? (
                           <div className="flex flex-wrap gap-1">
                             {m.tags.slice(0, 2).map((tag, i) => (
                               <span
                                 key={i}
-                                className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium"
+                                className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium"
                               >
                                 {tag}
                               </span>
@@ -270,7 +270,7 @@ export function MembersTable({
                           <span className="text-gray-400">—</span>
                         )}
                       </td>
-                      <td className="py-4 px-4 max-w-[300px]">
+                      <td className="py-4 px-4 border-r border-gray-200 max-w-[300px]">
                         <div className="text-xs text-gray-600 line-clamp-2">
                           {(() => {
                             const spouses = (spouseOf[m.id] || [])
@@ -293,7 +293,7 @@ export function MembersTable({
                           })()}
                         </div>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-r border-gray-200">
                         {m.isHeadOfFamily && (
                           <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-white rounded-full text-xs font-bold shadow-md">
                             HEAD
@@ -306,7 +306,7 @@ export function MembersTable({
                             size="sm"
                             variant="ghost"
                             onClick={() => onOpen(m.id)}
-                            className="hover:bg-indigo-100 hover:text-indigo-700 font-medium transition-all"
+                            className="hover:bg-green-100 hover:text-green-700 font-medium transition-all"
                           >
                             Open
                           </Button>

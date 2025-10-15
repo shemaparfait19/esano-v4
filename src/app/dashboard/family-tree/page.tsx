@@ -84,6 +84,7 @@ export default function FamilyTreePage() {
     error,
     setTree,
     addMember,
+    updateMember,
     addEdge,
     removeMember,
     setSelectedNode,
@@ -1239,6 +1240,7 @@ export default function FamilyTreePage() {
                 )}
                 <MembersTable
                   members={members as any}
+                  edges={edges as any}
                   onOpen={(id) => setEditingNode(id)}
                   onAiSuggest={handleAISuggestions}
                 />

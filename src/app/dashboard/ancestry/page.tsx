@@ -589,6 +589,7 @@ export default function AncestryBookPage() {
                       ? `${m.notes ? m.notes + "\n" : ""}You are here.`
                       : m.notes,
                 }))}
+                edges={(tree as any).edges || []}
               />
             </Card>
           </div>

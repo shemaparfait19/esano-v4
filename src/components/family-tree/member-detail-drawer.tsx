@@ -92,10 +92,17 @@ export function MemberDetailDrawer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent
+        className="max-w-3xl"
+        aria-describedby="member-detail-desc"
+      >
         <DialogHeader>
           <DialogTitle>Edit member</DialogTitle>
         </DialogHeader>
+        <p id="member-detail-desc" className="sr-only">
+          Edit personal details, upload memories and manage timeline for this
+          family member.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label>Full name</Label>
@@ -190,9 +197,19 @@ export function MemberDetailDrawer({
               <Input
                 type="file"
                 accept="image/*,video/*"
-                onChange={(e) =>
-                  e.target.files && upload("media", e.target.files[0])
-                }
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  if (f.size > 2 * 1024 * 1024) {
+                    toast({
+                      title: "File too large",
+                      description: "Max 2MB",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  upload("media", f);
+                }}
                 disabled={readonly || uploading}
               />
             </div>
@@ -201,9 +218,19 @@ export function MemberDetailDrawer({
               <Input
                 type="file"
                 accept="audio/*"
-                onChange={(e) =>
-                  e.target.files && upload("voice", e.target.files[0])
-                }
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  if (f.size > 2 * 1024 * 1024) {
+                    toast({
+                      title: "File too large",
+                      description: "Max 2MB",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  upload("voice", f);
+                }}
                 disabled={readonly || uploading}
               />
             </div>
@@ -212,9 +239,19 @@ export function MemberDetailDrawer({
               <Input
                 type="file"
                 accept="image/*,video/*,audio/*"
-                onChange={(e) =>
-                  e.target.files && upload("timeline", e.target.files[0])
-                }
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  if (f.size > 2 * 1024 * 1024) {
+                    toast({
+                      title: "File too large",
+                      description: "Max 2MB",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  upload("timeline", f);
+                }}
                 disabled={readonly || uploading}
               />
             </div>

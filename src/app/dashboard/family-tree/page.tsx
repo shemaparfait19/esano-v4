@@ -60,6 +60,7 @@ import {
 } from "firebase/firestore";
 import { FamilyTreeApplicationForm } from "@/components/family-tree/application-form";
 import { FamilyTreeSuggestions } from "@/components/dashboard/family-tree-suggestions";
+import { SubfamilyManager } from "@/components/family-tree/subfamily-manager";
 
 export default function FamilyTreePage() {
   const { user, userProfile } = useAuth();
@@ -1210,130 +1211,140 @@ export default function FamilyTreePage() {
             </div>
           )}
 
-          <div
-            id="tree-viewport"
-            className="flex-1 relative overflow-hidden bg-gray-50"
-          >
-            <div className="absolute top-2 left-2 z-10 bg-black/80 text-white text-xs p-2 rounded">
-              Tree: {tree ? "Loaded" : "Not loaded"} | Members:{" "}
-              {tree?.members?.length || 0} | Loading: {isLoading ? "Yes" : "No"}{" "}
-              | Error: {error || "None"}
-            </div>
-
-            {/* Mode Toggle Controls */}
-            <div className="absolute top-2 right-2 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Mode:</span>
-                <Button
-                  variant={isEditMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setIsEditMode(true);
-                    setShowViewResult(false);
-                  }}
-                  className="text-xs h-8"
-                >
-                  ✏️ Edit
-                </Button>
-                <Button
-                  variant={!isEditMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setIsEditMode(false);
-                    setShowViewResult(true);
-                  }}
-                  className="text-xs h-8"
-                >
-                  👁️ View Result
-                </Button>
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            <div className="flex-1 relative" id="tree-viewport">
+              <div className="absolute top-2 left-2 z-10 bg-black/80 text-white text-xs p-2 rounded">
+                Tree: {tree ? "Loaded" : "Not loaded"} | Members:{" "}
+                {tree?.members?.length || 0} | Loading:{" "}
+                {isLoading ? "Yes" : "No"} | Error: {error || "None"}
               </div>
 
-              {isEditMode && (
-                <div className="text-xs text-gray-500 mt-1">
-                  💡 Drag nodes • Double-click to edit
-                </div>
-              )}
-
-              {showViewResult && (
-                <div className="text-xs text-green-600 font-medium mt-1">
-                  ✨ Auto-arranged view
-                </div>
-              )}
-            </div>
-
-            {tree && tree.members && tree.members.length > 0 ? (
-              <TreeCanvas
-                onNodeClick={handleNodeClick}
-                onNodeDoubleClick={handleNodeDoubleClick}
-                onCanvasClick={handleCanvasClick}
-                presence={presence}
-                className="w-full h-full"
-                isEditMode={isEditMode}
-                showViewResult={showViewResult}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">
-                    No Family Members
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start building your family tree by adding your first member.
-                  </p>
-                  <Button onClick={handleAddMember} disabled={readonly}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add First Member
+              {/* Mode Toggle Controls */}
+              <div className="absolute top-2 right-2 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    Mode:
+                  </span>
+                  <Button
+                    variant={isEditMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setIsEditMode(true);
+                      setShowViewResult(false);
+                    }}
+                    className="text-xs h-8"
+                  >
+                    ✏️ Edit
+                  </Button>
+                  <Button
+                    variant={!isEditMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setIsEditMode(false);
+                      setShowViewResult(true);
+                    }}
+                    className="text-xs h-8"
+                  >
+                    👁️ View Result
                   </Button>
                 </div>
-              </div>
-            )}
 
-            <div className="sm:hidden absolute bottom-4 right-4 flex flex-col gap-2">
-              <Button
-                size="icon"
-                className="h-12 w-12 rounded-full shadow-lg"
-                onClick={handleAddMember}
-                disabled={readonly}
-              >
-                <Plus className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {editingNode && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                  <div className="sticky top-0 bg-white border-b px-6 py-4 rounded-t-xl">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        Edit Family Member
-                      </h2>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingNode(null)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        ✕
-                      </Button>
-                    </div>
+                {isEditMode && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    💡 Drag nodes • Double-click to edit
                   </div>
-                  <div className="p-6">
-                    <NodeEditor
-                      nodeId={editingNode}
-                      onClose={() => setEditingNode(null)}
-                      onSave={(member) => {
-                        setEditingNode(null);
-                        setTimeout(saveFamilyTree, 500);
-                      }}
-                      onDelete={(nodeId) => {
-                        removeMember(nodeId);
-                        setTimeout(saveFamilyTree, 500);
-                      }}
-                    />
+                )}
+
+                {showViewResult && (
+                  <div className="text-xs text-green-600 font-medium mt-1">
+                    ✨ Auto-arranged view
+                  </div>
+                )}
+              </div>
+
+              {tree && tree.members && tree.members.length > 0 ? (
+                <TreeCanvas
+                  onNodeClick={handleNodeClick}
+                  onNodeDoubleClick={handleNodeDoubleClick}
+                  onCanvasClick={handleCanvasClick}
+                  presence={presence}
+                  className="w-full h-full"
+                  isEditMode={isEditMode}
+                  showViewResult={showViewResult}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Family Members
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Start building your family tree by adding your first
+                      member.
+                    </p>
+                    <Button onClick={handleAddMember} disabled={readonly}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add First Member
+                    </Button>
                   </div>
                 </div>
+              )}
+
+              <div className="sm:hidden absolute bottom-4 right-4 flex flex-col gap-2">
+                <Button
+                  size="icon"
+                  className="h-12 w-12 rounded-full shadow-lg"
+                  onClick={handleAddMember}
+                  disabled={readonly}
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
               </div>
-            )}
+
+              {editingNode && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                  <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="sticky top-0 bg-white border-b px-6 py-4 rounded-t-xl">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold text-gray-900">
+                          Edit Family Member
+                        </h2>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingNode(null)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <NodeEditor
+                        nodeId={editingNode}
+                        onClose={() => setEditingNode(null)}
+                        onSave={(member) => {
+                          setEditingNode(null);
+                          setTimeout(saveFamilyTree, 500);
+                        }}
+                        onDelete={(nodeId) => {
+                          removeMember(nodeId);
+                          setTimeout(saveFamilyTree, 500);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="w-full lg:w-80 xl:w-96 border-t lg:border-t-0 lg:border-l bg-muted/20 p-3 space-y-4 overflow-auto">
+              {/* Subfamily management */}
+              <SubfamilyManager
+                ownerId={ownerIdParam || user?.uid || ""}
+                members={members}
+                readonly={readonly}
+              />
+            </div>
           </div>
 
           <Dialog

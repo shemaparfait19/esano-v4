@@ -82,6 +82,18 @@ export interface FamilyEdge {
   };
 }
 
+// Subfamily types
+export interface Subfamily {
+  id: string;
+  name: string;
+  description?: string;
+  headMemberId?: string; // The subfamily head (must be an existing member id)
+  memberIds: string[]; // Member ids that belong primarily to this subfamily
+  parentFamilyId: string; // The root family id (same as FamilyTree.id)
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TreeSettings {
   colorScheme: string;
   viewMode: "classic" | "radial" | "timeline";
@@ -114,6 +126,7 @@ export interface FamilyTree {
   ownerId: string;
   members: FamilyMember[];
   edges: FamilyEdge[];
+  subfamilies?: Subfamily[]; // Optional sections within the main family
   settings: TreeSettings;
   annotations: TreeAnnotation[];
   version: TreeVersion;

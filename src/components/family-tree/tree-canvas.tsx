@@ -66,6 +66,7 @@ export function TreeCanvas({
     setEditingNode,
     renderOptions,
     updateMember,
+    setDirty,
   } = useFamilyTreeStore();
 
   // ===== Build edit mode layout (preserves manual positions)
@@ -734,6 +735,8 @@ export function TreeCanvas({
     // After moving a node, tidy the layout to keep things neat
     if (wasDraggingNode) {
       tidyLayout();
+      // Mark as dirty so autosave can persist new positions
+      setDirty(true);
     }
   };
 
@@ -788,6 +791,7 @@ export function TreeCanvas({
     setDraggingNode(null);
     if (wasDraggingNode) {
       tidyLayout();
+      setDirty(true);
     }
   };
 

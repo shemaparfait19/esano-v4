@@ -9,6 +9,14 @@ import type { FamilyMember as AppMember } from "@/types/family-tree";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, BookOpen, Home } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 type PageData = {
   id: string;
@@ -88,19 +96,62 @@ export default function AncestryBookPage() {
   const [featuredMedia, setFeaturedMedia] = useState<
     Map<string, { url: string; type: "photo" | "video" }>
   >(new Map());
+  const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [accessible, setAccessible] = useState<
+    Array<{ ownerId: string; label: string; role: "viewer" | "editor" }>
+  >([]);
 
   useEffect(() => {
     let ignore = false;
-    async function load() {
+    async function loadDefault() {
       if (!user) return;
-      const snap = await getDoc(doc(db, "familyTrees", user.uid));
-      if (!ignore && snap.exists()) setTree(snap.data() as any as FamilyTree);
+      // Determine accessible books: my tree + shares
+      try {
+        const list: Array<{
+          ownerId: string;
+          label: string;
+          role: "viewer" | "editor";
+        }> = [];
+        list.push({
+          ownerId: user.uid,
+          label: "My Family Book",
+          role: "editor",
+        });
+        // fetch shares granted to this user
+        try {
+          const res = await fetch(
+            `/api/family-tree/share?sharedWithMe=1&userId=${user.uid}`
+          );
+          const data = await res.json();
+          if (res.ok && Array.isArray(data.shares)) {
+            data.shares.forEach((s: any) => {
+              list.push({
+                ownerId: s.ownerId,
+                label: s.ownerName || s.ownerId,
+                role: s.role,
+              });
+            });
+          }
+        } catch {}
+        if (!ignore) setAccessible(list);
+
+        const activeOwner = list[0]?.ownerId || user.uid;
+        if (!ignore) setOwnerId(activeOwner);
+        const snap = await getDoc(doc(db, "familyTrees", activeOwner));
+        if (!ignore && snap.exists()) setTree(snap.data() as any as FamilyTree);
+      } catch {}
     }
-    load();
+    loadDefault();
     return () => {
       ignore = true;
     };
   }, [user]);
+
+  async function loadByOwner(targetOwnerId: string) {
+    setPageIndex(0);
+    const snap = await getDoc(doc(db, "familyTrees", targetOwnerId));
+    if (snap.exists()) setTree(snap.data() as any as FamilyTree);
+  }
 
   const pages: PageData[] = useMemo(() => {
     if (!tree) return [];
@@ -300,6 +351,27 @@ export default function AncestryBookPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            {/* Accessible books selector */}
+            {accessible.length > 0 && (
+              <Select
+                value={ownerId || ""}
+                onValueChange={(v) => {
+                  setOwnerId(v);
+                  loadByOwner(v);
+                }}
+              >
+                <SelectTrigger className="w-[220px] bg-slate-800/40 border-slate-600 text-amber-100">
+                  <SelectValue placeholder="Select family book" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accessible.map((a) => (
+                    <SelectItem key={a.ownerId} value={a.ownerId}>
+                      {a.label} ({a.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Button
               variant="ghost"
               size="sm"

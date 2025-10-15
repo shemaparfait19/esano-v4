@@ -164,7 +164,11 @@ function smartSuggestions(members: Member[], edges: Edge[]) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId } = body || {};
+    const {
+      userId,
+      members: providedMembers,
+      edges: providedEdges,
+    } = body || {};
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
@@ -172,13 +176,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const snap = await adminDb.collection("familyTrees").doc(userId).get();
-    if (!snap.exists) {
-      return NextResponse.json({ suggestions: [], conflicts: [] });
+    let members: Member[] = [];
+    let edges: Edge[] = [];
+    if (Array.isArray(providedMembers) && Array.isArray(providedEdges)) {
+      members = providedMembers as Member[];
+      edges = providedEdges as Edge[];
+    } else {
+      const snap = await adminDb.collection("familyTrees").doc(userId).get();
+      if (!snap.exists) {
+        return NextResponse.json({ suggestions: [], conflicts: [] });
+      }
+      const tree = snap.data() as { members?: Member[]; edges?: Edge[] };
+      members = Array.isArray(tree.members) ? tree.members : [];
+      edges = Array.isArray(tree.edges) ? tree.edges : [];
     }
-    const tree = snap.data() as { members?: Member[]; edges?: Edge[] };
-    const members = Array.isArray(tree.members) ? tree.members : [];
-    const edges = Array.isArray(tree.edges) ? tree.edges : [];
 
     const conflicts = checkConflicts(members, edges);
     const suggestions = smartSuggestions(members, edges);

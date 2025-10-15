@@ -264,9 +264,18 @@ export function MembersTable({
                               .join(", ")}
                           </div>
                         )}
+                        {siblingsOf[m.id]?.length > 0 && (
+                          <div>
+                            Siblings/Relatives:{" "}
+                            {siblingsOf[m.id]
+                              .map((id) => byId[id]?.firstName)
+                              .join(", ")}
+                          </div>
+                        )}
                         {!spouseOf[m.id]?.length &&
                           !parentsOf[m.id]?.length &&
-                          !childrenOf[m.id]?.length && (
+                          !childrenOf[m.id]?.length &&
+                          !siblingsOf[m.id]?.length && (
                             <div className="text-gray-400">No relations</div>
                           )}
                       </div>

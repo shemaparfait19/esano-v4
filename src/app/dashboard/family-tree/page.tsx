@@ -763,7 +763,7 @@ export default function FamilyTreePage() {
       const res = await fetch("/api/family-tree/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: ownerId }),
+        body: JSON.stringify({ userId: ownerId, members, edges }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");

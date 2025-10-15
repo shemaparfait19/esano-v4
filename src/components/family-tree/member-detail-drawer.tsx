@@ -34,7 +34,7 @@ interface MemberDetailDrawerProps {
   onAddEdge?: (edge: {
     fromId: string;
     toId: string;
-    type: "parent" | "spouse";
+    type: FamilyEdge["type"];
   }) => void;
   onRemoveEdge?: (edgeId: string) => void;
 }
@@ -57,6 +57,8 @@ export function MemberDetailDrawer({
   const [relSpouse, setRelSpouse] = useState<string | "">("");
   const [relParent1, setRelParent1] = useState<string | "">("");
   const [relParent2, setRelParent2] = useState<string | "">("");
+  const [relExtraType, setRelExtraType] = useState<FamilyEdge["type"] | "">("");
+  const [relExtraTarget, setRelExtraTarget] = useState<string | "">("");
 
   React.useEffect(() => {
     setDraft(member);
@@ -316,6 +318,53 @@ export function MemberDetailDrawer({
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label>Extra relation</Label>
+                  <Select
+                    value={(relExtraType as any) || ""}
+                    onValueChange={(v) => setRelExtraType(v as any)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="big_brother">Big Brother</SelectItem>
+                      <SelectItem value="little_brother">
+                        Little Brother
+                      </SelectItem>
+                      <SelectItem value="big_sister">Big Sister</SelectItem>
+                      <SelectItem value="little_sister">
+                        Little Sister
+                      </SelectItem>
+                      <SelectItem value="aunt">Aunt</SelectItem>
+                      <SelectItem value="uncle">Uncle</SelectItem>
+                      <SelectItem value="cousin_big">Cousin (Older)</SelectItem>
+                      <SelectItem value="cousin_little">
+                        Cousin (Younger)
+                      </SelectItem>
+                      <SelectItem value="guardian">Guardian</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Target member</Label>
+                  <Select
+                    value={relExtraTarget}
+                    onValueChange={(v) => setRelExtraTarget(v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <div>
@@ -392,7 +441,19 @@ export function MemberDetailDrawer({
                 </Button>
               )}
               {!readonly && (onAddEdge || onRemoveEdge) && (
-                <Button variant="secondary" onClick={saveRelationships}>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    saveRelationships();
+                    if (relExtraType && relExtraTarget) {
+                      onAddEdge?.({
+                        fromId: draft.id,
+                        toId: relExtraTarget,
+                        type: relExtraType as any,
+                      });
+                    }
+                  }}
+                >
                   Save Relationships
                 </Button>
               )}

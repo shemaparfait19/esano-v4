@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import type { FamilyMember } from "@/types/family-tree";
+import type { FamilyMember, FamilyEdge } from "@/types/family-tree";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,14 @@ interface MemberDetailDrawerProps {
   readonly?: boolean;
   onSave?: (member: FamilyMember) => void;
   onDelete?: (memberId: string) => void;
+  members?: FamilyMember[];
+  edges?: FamilyEdge[];
+  onAddEdge?: (edge: {
+    fromId: string;
+    toId: string;
+    type: "parent" | "spouse";
+  }) => void;
+  onRemoveEdge?: (edgeId: string) => void;
 }
 
 export function MemberDetailDrawer({
@@ -39,11 +47,35 @@ export function MemberDetailDrawer({
   readonly,
   onSave,
   onDelete,
+  members = [],
+  edges = [],
+  onAddEdge,
+  onRemoveEdge,
 }: MemberDetailDrawerProps) {
   const [draft, setDraft] = useState<FamilyMember | null>(member);
   const [uploading, setUploading] = useState(false);
+  const [relSpouse, setRelSpouse] = useState<string | "">("");
+  const [relParent1, setRelParent1] = useState<string | "">("");
+  const [relParent2, setRelParent2] = useState<string | "">("");
 
-  React.useEffect(() => setDraft(member), [member]);
+  React.useEffect(() => {
+    setDraft(member);
+    if (!member) return;
+    const curSpouses = edges
+      .filter(
+        (e) =>
+          e.type === "spouse" &&
+          (e.fromId === member.id || e.toId === member.id)
+      )
+      .map((e) => (e.fromId === member.id ? e.toId : e.fromId));
+    setRelSpouse(curSpouses[0] || "");
+    const curParents = edges
+      .filter((e) => e.type === "parent" && e.toId === member.id)
+      .map((e) => e.fromId)
+      .slice(0, 2);
+    setRelParent1(curParents[0] || "");
+    setRelParent2(curParents[1] || "");
+  }, [member, edges]);
 
   if (!draft) return null;
 
@@ -88,6 +120,40 @@ export function MemberDetailDrawer({
     if (!draft || !onSave) return;
     onSave(draft);
     toast({ title: "Saved" });
+  }
+
+  function saveRelationships() {
+    if (!draft) return;
+    const me = draft.id;
+    const desiredParents = [relParent1, relParent2].filter(Boolean) as string[];
+    const currentParentEdges = edges.filter(
+      (e) => e.type === "parent" && e.toId === me
+    );
+    currentParentEdges.forEach((e) => {
+      if (!desiredParents.includes(e.fromId)) onRemoveEdge?.(e.id);
+    });
+    desiredParents.forEach((pid) => {
+      const exists = currentParentEdges.some((e) => e.fromId === pid);
+      if (!exists) onAddEdge?.({ fromId: pid, toId: me, type: "parent" });
+    });
+
+    const desiredSpouse = relSpouse || "";
+    const currentSpouseEdges = edges.filter(
+      (e) => e.type === "spouse" && (e.fromId === me || e.toId === me)
+    );
+    currentSpouseEdges.forEach((e) => {
+      const other = e.fromId === me ? e.toId : e.fromId;
+      if (!desiredSpouse || other !== desiredSpouse) onRemoveEdge?.(e.id);
+    });
+    if (desiredSpouse) {
+      const exists = currentSpouseEdges.some((e) => {
+        const other = e.fromId === me ? e.toId : e.fromId;
+        return other === desiredSpouse;
+      });
+      if (!exists)
+        onAddEdge?.({ fromId: me, toId: desiredSpouse, type: "spouse" });
+    }
+    toast({ title: "Relationships updated" });
   }
 
   return (
@@ -192,6 +258,66 @@ export function MemberDetailDrawer({
           </div>
 
           <div className="space-y-3">
+            {/* Relationship Manager */}
+            <div className="space-y-2">
+              <Label className="font-medium">Relationships</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Parent 1</Label>
+                  <Select
+                    value={relParent1}
+                    onValueChange={(v) => setRelParent1(v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select parent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Parent 2</Label>
+                  <Select
+                    value={relParent2}
+                    onValueChange={(v) => setRelParent2(v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select parent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Spouse</Label>
+                  <Select
+                    value={relSpouse}
+                    onValueChange={(v) => setRelSpouse(v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select spouse" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
             <div>
               <Label>Upload photo/video</Label>
               <Input
@@ -263,6 +389,11 @@ export function MemberDetailDrawer({
                   onClick={() => onDelete(draft.id)}
                 >
                   Delete
+                </Button>
+              )}
+              {!readonly && (onAddEdge || onRemoveEdge) && (
+                <Button variant="secondary" onClick={saveRelationships}>
+                  Save Relationships
                 </Button>
               )}
             </div>

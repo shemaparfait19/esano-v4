@@ -1218,7 +1218,7 @@ export default function FamilyTreePage() {
                 {!readonly && (
                   <GenerationForm
                     members={members as any}
-                    onAddMembers={(newMembers) => {
+                    onAdd={({ members: newMembers, edges: newEdges }) => {
                       newMembers.forEach((m) =>
                         addMember({
                           firstName: m.firstName,
@@ -1231,6 +1231,13 @@ export default function FamilyTreePage() {
                           location: m.location,
                           notes: m.notes,
                           customFields: {},
+                        })
+                      );
+                      newEdges.forEach((e) =>
+                        addEdge({
+                          fromId: e.fromId,
+                          toId: e.toId,
+                          type: e.type as any,
                         })
                       );
                       setDirty(true);
@@ -1258,6 +1265,16 @@ export default function FamilyTreePage() {
                   readonly={readonly}
                   onSave={(mm) => updateMember(mm.id, mm as any)}
                   onDelete={(id) => removeMember(id)}
+                  members={members as any}
+                  edges={edges as any}
+                  onAddEdge={(e) =>
+                    addEdge({
+                      fromId: e.fromId,
+                      toId: e.toId,
+                      type: e.type as any,
+                    })
+                  }
+                  onRemoveEdge={(edgeId) => removeEdge(edgeId)}
                 />
               </div>
 

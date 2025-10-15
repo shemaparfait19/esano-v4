@@ -17,6 +17,21 @@ export function FamilyCodeBadge({ ownerId, isHead }: FamilyCodeBadgeProps) {
   const [familyName, setFamilyName] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
+  React.useEffect(() => {
+    // Try to fetch existing active code for this owner
+    async function fetchExisting() {
+      try {
+        const res = await fetch(`/api/family-code/validate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: (code || "").replace(/-/g, "") }),
+        });
+        // We do not know the code upfront; skip if none
+      } catch {}
+    }
+    // If code is not set, we can't validate; in a full implementation we'd store mapping in user doc
+  }, [ownerId]);
+
   async function generate() {
     try {
       setLoading(true);

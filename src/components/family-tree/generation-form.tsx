@@ -18,19 +18,30 @@ import { toast } from "@/hooks/use-toast";
 
 interface GenerationFormProps {
   members: FamilyMember[];
-  onAddMembers: (newMembers: FamilyMember[]) => void;
+  onAdd: (payload: {
+    members: FamilyMember[];
+    edges: Array<{ fromId: string; toId: string; type: "parent" | "spouse" }>;
+  }) => void;
   onSave?: () => void;
   readonly?: boolean;
 }
 
 export function GenerationForm({
   members,
-  onAddMembers,
+  onAdd,
   onSave,
   readonly,
 }: GenerationFormProps) {
   const [generation, setGeneration] = useState<number>(0);
-  const [rows, setRows] = useState<Array<Partial<FamilyMember>>>([
+  const [rows, setRows] = useState<
+    Array<
+      Partial<FamilyMember> & {
+        spouseId?: string;
+        parentIds?: string[];
+        role?: string;
+      }
+    >
+  >([
     {
       firstName: "",
       lastName: "",
@@ -39,6 +50,9 @@ export function GenerationForm({
       deathDate: "",
       isDeceased: false,
       email: undefined as any,
+      spouseId: undefined,
+      parentIds: [],
+      role: undefined,
     },
   ]);
 
@@ -66,7 +80,11 @@ export function GenerationForm({
         birthDate: r.birthDate,
         deathDate: r.deathDate,
         isDeceased: !!r.isDeceased,
-        tags: Array.isArray(r.tags as any) ? (r.tags as any as string[]) : [],
+        tags: Array.isArray(r.tags as any)
+          ? (r.tags as any as string[])
+          : r.role
+          ? [r.role]
+          : [],
         location: r.location,
         notes: r.notes as any,
         contacts: { email: (r as any).email },
@@ -83,7 +101,26 @@ export function GenerationForm({
       });
       return;
     }
-    onAddMembers(newMembers as any);
+
+    const edges: Array<{
+      fromId: string;
+      toId: string;
+      type: "parent" | "spouse";
+    }> = [];
+    rows.forEach((r, idx) => {
+      const createdId = newMembers[idx]?.id;
+      if (!createdId) return;
+      if (Array.isArray(r.parentIds)) {
+        r.parentIds.forEach((pid) => {
+          if (pid) edges.push({ fromId: pid, toId: createdId, type: "parent" });
+        });
+      }
+      if (r.spouseId) {
+        edges.push({ fromId: createdId, toId: r.spouseId, type: "spouse" });
+      }
+    });
+
+    onAdd({ members: newMembers as any, edges });
     if (onSave) onSave();
     toast({
       title: "Generation added",
@@ -189,6 +226,109 @@ export function GenerationForm({
                 }
                 disabled={readonly}
               />
+            </div>
+            {/* Relationship inputs */}
+            <div className="space-y-1">
+              <Label>Role</Label>
+              <Input
+                value={(row as any).role || ""}
+                onChange={(e) =>
+                  setRows((r) =>
+                    r.map((it, i) =>
+                      i === idx ? { ...it, role: e.target.value } : it
+                    )
+                  )
+                }
+                disabled={readonly}
+                placeholder="e.g., father, mother, son"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Spouse</Label>
+              <Select
+                value={(row as any).spouseId || ""}
+                onValueChange={(v) =>
+                  setRows((r) =>
+                    r.map((it, i) =>
+                      i === idx ? { ...it, spouseId: v || undefined } : it
+                    )
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select spouse" />
+                </SelectTrigger>
+                <SelectContent>
+                  {members.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <Label>Parents</Label>
+              <div className="grid grid-cols-2 gap-1">
+                <Select
+                  value={(rows[idx] as any).parentIds?.[0] || ""}
+                  onValueChange={(v) =>
+                    setRows((r) =>
+                      r.map((it, i) =>
+                        i === idx
+                          ? {
+                              ...it,
+                              parentIds: [
+                                v || undefined,
+                                ((it as any).parentIds || [])[1] || undefined,
+                              ].filter(Boolean) as any,
+                            }
+                          : it
+                      )
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Parent 1" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={(rows[idx] as any).parentIds?.[1] || ""}
+                  onValueChange={(v) =>
+                    setRows((r) =>
+                      r.map((it, i) =>
+                        i === idx
+                          ? {
+                              ...it,
+                              parentIds: [
+                                ((it as any).parentIds || [])[0] || undefined,
+                                v || undefined,
+                              ].filter(Boolean) as any,
+                            }
+                          : it
+                      )
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Parent 2" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex items-center gap-2 md:col-span-2">
               {!readonly && (

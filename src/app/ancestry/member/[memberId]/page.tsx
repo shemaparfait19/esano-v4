@@ -80,6 +80,14 @@ export default function MemberProfilePage({
       .map((e) => (e.fromId === member.id ? e.toId : e.fromId));
   }, [edges, member]);
 
+  // Map ids to names for display
+  const nameById = useMemo(() => {
+    const map = new Map<string, string>();
+    edges.forEach(() => {});
+    // We only have the selected member's relations, so show IDs for now if names aren't available
+    return map;
+  }, [edges]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

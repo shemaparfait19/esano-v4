@@ -96,6 +96,35 @@ export function MemberDetailDrawer({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
       toast({ title: "Uploaded" });
+      // Update local draft so user sees the media immediately
+      setDraft((prev) => {
+        if (!prev) return prev;
+        if (kind === "voice") {
+          const list = Array.isArray(prev.voiceUrls) ? prev.voiceUrls : [];
+          return { ...prev, voiceUrls: [...list, data.url] } as any;
+        }
+        if (kind === "timeline") {
+          const list = Array.isArray(prev.timeline) ? prev.timeline : [];
+          return {
+            ...prev,
+            timeline: [
+              ...list,
+              {
+                id: `tl_${Date.now()}`,
+                type: file.type.startsWith("audio")
+                  ? "audio"
+                  : file.type.startsWith("video")
+                  ? "video"
+                  : "photo",
+                date: new Date().toISOString(),
+                url: data.url,
+              },
+            ],
+          } as any;
+        }
+        const list = Array.isArray(prev.mediaUrls) ? prev.mediaUrls : [];
+        return { ...prev, mediaUrls: [...list, data.url] } as any;
+      });
     } catch (e: any) {
       toast({
         title: "Upload failed",

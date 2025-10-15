@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,17 +159,17 @@ export function MemberDetailDrawer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-3xl"
-        aria-describedby="member-detail-desc"
-      >
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Edit member</DialogTitle>
+          <DialogTitle>
+            {readonly ? "Member profile" : "Edit member"}
+          </DialogTitle>
+          <DialogDescription>
+            {readonly
+              ? "View personal details, media, voice memories and timeline."
+              : "Edit personal details, upload memories and manage timeline."}
+          </DialogDescription>
         </DialogHeader>
-        <p id="member-detail-desc" className="sr-only">
-          Edit personal details, upload memories and manage timeline for this
-          family member.
-        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label>Full name</Label>

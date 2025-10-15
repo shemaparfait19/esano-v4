@@ -109,11 +109,13 @@ export async function POST(request: NextRequest) {
     }
 
     tree.updatedAt = new Date().toISOString();
-    await ref.set(tree);
+    // Merge to reduce overwrite risks
+    await ref.set(tree, { merge: true } as any);
     return NextResponse.json({ success: true, url: dataUrl });
   } catch (e: any) {
+    console.error("Media upload error:", e);
     return NextResponse.json(
-      { error: "Upload failed", detail: e?.message || "" },
+      { error: "Upload failed", detail: String(e?.message || e) },
       { status: 500 }
     );
   }

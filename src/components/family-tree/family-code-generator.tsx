@@ -40,6 +40,7 @@ export function FamilyCodeGenerator({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          userId: userProfile?.uid || userProfile?.id || userProfile?.userId,
           familyName: familyName.trim(),
         }),
       });
@@ -47,11 +48,12 @@ export function FamilyCodeGenerator({
       const data = await response.json();
 
       if (response.ok) {
-        setGeneratedCode(data.code);
-        onCodeGenerated?.(data.code);
+        const code = data.formattedCode || data.familyCode || data.code;
+        setGeneratedCode(code);
+        onCodeGenerated?.(code);
         toast({
           title: "Family Code Generated!",
-          description: `Your family code is: ${data.code}`,
+          description: `Your family code is: ${code}`,
         });
       } else {
         toast({

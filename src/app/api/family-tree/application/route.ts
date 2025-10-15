@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { Buffer } from "buffer";
 import { adminDb } from "@/lib/firebase-admin";
 import type { FamilyTreeApplication } from "@/types/firestore";
 
@@ -83,7 +82,9 @@ export async function POST(request: Request) {
       if (nationalIdFile) {
         const fileName = `nationalId_${Date.now()}_${nationalIdFile.name}`;
         const fileBuffer = await nationalIdFile.arrayBuffer();
-        const base64Content = Buffer.from(fileBuffer).toString("base64");
+        const base64Content = btoa(
+          String.fromCharCode(...new Uint8Array(fileBuffer))
+        );
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({
@@ -110,7 +111,9 @@ export async function POST(request: Request) {
           proofOfFamilyFile.name
         }`;
         const fileBuffer = await proofOfFamilyFile.arrayBuffer();
-        const base64Content = Buffer.from(fileBuffer).toString("base64");
+        const base64Content = btoa(
+          String.fromCharCode(...new Uint8Array(fileBuffer))
+        );
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({
@@ -137,7 +140,9 @@ export async function POST(request: Request) {
           guardianConsentFile.name
         }`;
         const fileBuffer = await guardianConsentFile.arrayBuffer();
-        const base64Content = Buffer.from(fileBuffer).toString("base64");
+        const base64Content = btoa(
+          String.fromCharCode(...new Uint8Array(fileBuffer))
+        );
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({
@@ -247,22 +252,12 @@ export async function GET(request: Request) {
       );
     }
 
-    let snap;
-    try {
-      const q = adminDb
-        .collection("familyTreeApplications")
-        .where("userId", "==", userId)
-        .orderBy("createdAt", "desc")
-        .limit(1);
-      snap = await q.get();
-    } catch (orderErr) {
-      // Fallback without orderBy in case of index issues
-      const q = adminDb
-        .collection("familyTreeApplications")
-        .where("userId", "==", userId)
-        .limit(1);
-      snap = await q.get();
-    }
+    const q = adminDb
+      .collection("familyTreeApplications")
+      .where("userId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .limit(1);
+    const snap = await q.get();
     if (snap.empty) {
       return NextResponse.json({ hasApplication: false, status: null });
     }

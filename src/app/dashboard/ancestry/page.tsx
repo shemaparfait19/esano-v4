@@ -590,6 +590,7 @@ export default function AncestryBookPage() {
                       : m.notes,
                 }))}
                 edges={(tree as any).edges || []}
+                ownerId={ownerId || user?.uid || undefined}
               />
             </Card>
           </div>

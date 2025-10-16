@@ -136,19 +136,33 @@ export default function OtherUserProfilePage() {
   const handleConnect = async () => {
     if (!user) return;
     try {
-      const token = await user.getIdToken();
+      console.log('[Profile Connect] Sending request:', {
+        fromUserId: user.uid,
+        toUserId: userId
+      });
+      
       const resp = await fetch("/api/requests", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ recipientUid: userId }),
+        body: JSON.stringify({ 
+          fromUserId: user.uid,
+          toUserId: userId 
+        }),
       });
-      if (!resp.ok) throw new Error("Failed to send request");
+      
+      const data = await resp.json();
+      console.log('[Profile Connect] Response:', { status: resp.status, data });
+      
+      if (!resp.ok) {
+        throw new Error(data?.error || "Failed to send request");
+      }
+      
       setOutgoingExists(true);
       toast({ title: "Connection request sent" });
     } catch (e: any) {
+      console.error('[Profile Connect] Error:', e);
       toast({
         title: "Failed",
         description: e?.message || "Try again",

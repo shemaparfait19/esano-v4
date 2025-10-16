@@ -266,20 +266,27 @@ export default function SearchPage() {
     async (userId: string) => {
       if (!user) return;
 
-      const token = await user.getIdToken();
+      console.log('[Search Connect] Sending request:', {
+        fromUserId: user.uid,
+        toUserId: userId
+      });
+
       const response = await fetch("/api/requests", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          recipientUid: userId,
+          fromUserId: user.uid,
+          toUserId: userId,
         }),
       });
 
+      const data = await response.json();
+      console.log('[Search Connect] Response:', { status: response.status, data });
+
       if (!response.ok) {
-        throw new Error("Failed to send connection request");
+        throw new Error(data?.error || "Failed to send connection request");
       }
 
       // Update the result to show pending status

@@ -92,10 +92,13 @@ export function MembersTable({
     return list;
   }, [members, inferredGen]);
 
-  const byId = useMemo(
-    () => Object.fromEntries(members.map((m) => [m.id, m])),
-    [members]
-  );
+  const byId = useMemo(() => {
+    const map = Object.fromEntries(members.map((m) => [m.id, m]));
+    // Debug: Log member IDs
+    console.log('Available member IDs:', Object.keys(map));
+    console.log('Total members:', members.length);
+    return map;
+  }, [members]);
 
   const parentsOf = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -108,9 +111,13 @@ export function MembersTable({
   const childrenOf = useMemo(() => {
     const map: Record<string, string[]> = {};
     edges.forEach((e) => {
-      if (e.type === "parent")
+      if (e.type === "parent") {
         (map[e.fromId] = map[e.fromId] || []).push(e.toId);
+      }
     });
+    // Debug: Log children relationships
+    console.log('childrenOf map:', map);
+    console.log('Edges:', edges);
     return map;
   }, [edges]);
 
@@ -374,7 +381,14 @@ export function MembersTable({
                               Children:
                             </span>{" "}
                             {childrenOf[m.id]
-                              .map((id) => byId[id]?.fullName || "Unknown")
+                              .map((id) => {
+                                const child = byId[id];
+                                if (!child) {
+                                  console.warn(`Child not found: ${id}`);
+                                  return `Unknown (${id.slice(0, 8)}...)`;
+                                }
+                                return child.fullName || child.firstName || id;
+                              })
                               .join(", ")}
                           </div>
                         )}
@@ -620,7 +634,14 @@ export function MembersTable({
                             </span>{" "}
                             <span className="text-gray-900 font-medium">
                               {childrenOf[m.id]
-                                .map((id) => byId[id]?.fullName || "Unknown")
+                                .map((id) => {
+                                  const child = byId[id];
+                                  if (!child) {
+                                    console.warn(`Child not found in mobile view: ${id}`);
+                                    return `Unknown (${id.slice(0, 8)}...)`;
+                                  }
+                                  return child.fullName || child.firstName || id;
+                                })
                                 .join(", ")}
                             </span>
                           </div>

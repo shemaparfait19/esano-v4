@@ -381,13 +381,14 @@ export function MemberDetailDrawer({
                   <Label>Parent 1</Label>
                   <Select
                     value={relParent1}
-                    onValueChange={(v) => setRelParent1(v)}
+                    onValueChange={(v) => setRelParent1(v === "none" ? "" : v)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select parent" />
                     </SelectTrigger>
                     <SelectContent>
-                      {members.map((m) => (
+                      <SelectItem value="none">None</SelectItem>
+                      {members.filter(m => m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.fullName}
                         </SelectItem>
@@ -399,13 +400,14 @@ export function MemberDetailDrawer({
                   <Label>Parent 2</Label>
                   <Select
                     value={relParent2}
-                    onValueChange={(v) => setRelParent2(v)}
+                    onValueChange={(v) => setRelParent2(v === "none" ? "" : v)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select parent" />
                     </SelectTrigger>
                     <SelectContent>
-                      {members.map((m) => (
+                      <SelectItem value="none">None</SelectItem>
+                      {members.filter(m => m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.fullName}
                         </SelectItem>
@@ -417,13 +419,14 @@ export function MemberDetailDrawer({
                   <Label>Spouse</Label>
                   <Select
                     value={relSpouse}
-                    onValueChange={(v) => setRelSpouse(v)}
+                    onValueChange={(v) => setRelSpouse(v === "none" ? "" : v)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select spouse" />
                     </SelectTrigger>
                     <SelectContent>
-                      {members.map((m) => (
+                      <SelectItem value="none">None</SelectItem>
+                      {members.filter(m => m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.fullName}
                         </SelectItem>
@@ -441,6 +444,7 @@ export function MemberDetailDrawer({
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem value="parent">Parent</SelectItem>
                       <SelectItem value="child">Child</SelectItem>
                       <SelectItem value="grandparent">Grandparent</SelectItem>
@@ -476,13 +480,14 @@ export function MemberDetailDrawer({
                   <Label>Target member</Label>
                   <Select
                     value={relExtraTarget}
-                    onValueChange={(v) => setRelExtraTarget(v)}
+                    onValueChange={(v) => setRelExtraTarget(v === "none" ? "" : v)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select member" />
                     </SelectTrigger>
                     <SelectContent>
-                      {members.map((m) => (
+                      <SelectItem value="none">None</SelectItem>
+                      {members.filter(m => m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.fullName}
                         </SelectItem>

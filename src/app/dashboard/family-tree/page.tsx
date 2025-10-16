@@ -73,6 +73,7 @@ import { FamilyTreeToolbar } from "@/components/family-tree/family-tree-toolbar"
 import { AddMemberDialog } from "@/components/family-tree/add-member-dialog";
 import { AddRelationshipDialog } from "@/components/family-tree/add-relationship-dialog";
 import { ShareDialog } from "@/components/family-tree/share-dialog";
+import { TreeSwitcher } from "@/components/family-tree/tree-switcher";
 
 export default function FamilyTreePage() {
   const { user, userProfile } = useAuth();
@@ -137,6 +138,7 @@ export default function FamilyTreePage() {
   const [shares, setShares] = useState<any[]>([]);
   const [shareNames, setShareNames] = useState<Record<string, string>>({});
   const [ownerName, setOwnerName] = useState<string>("");
+  const [mySharedTrees, setMySharedTrees] = useState<Array<{ ownerId: string; ownerName: string; role: "viewer" | "editor" }>>([]);
   const [viewerRole, setViewerRole] = useState<"viewer" | "editor" | null>(
     null
   );
@@ -204,6 +206,36 @@ export default function FamilyTreePage() {
 
     checkApplicationStatus();
   }, [user?.uid, ownerIdParam, userProfile?.familyTreeApproved]);
+
+  // Load shared trees for switcher
+  useEffect(() => {
+    if (!user?.uid) return;
+    const loadSharedTrees = async () => {
+      try {
+        const res = await fetch(`/api/family-tree/share?sharedWithMe=1&userId=${user.uid}`);
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.shares)) {
+          const trees = await Promise.all(
+            data.shares.map(async (s: any) => {
+              try {
+                const { getDoc, doc } = await import("firebase/firestore");
+                const snap = await getDoc(doc(db, "users", s.ownerId));
+                const ud = snap.exists() ? (snap.data() as any) : null;
+                const name = ud?.fullName || ud?.preferredName || ud?.firstName || s.ownerId;
+                return { ownerId: s.ownerId, ownerName: name, role: s.role };
+              } catch {
+                return { ownerId: s.ownerId, ownerName: s.ownerId, role: s.role };
+              }
+            })
+          );
+          setMySharedTrees(trees);
+        }
+      } catch (err) {
+        console.error("Failed to load shared trees:", err);
+      }
+    };
+    loadSharedTrees();
+  }, [user?.uid]);
 
   // Load access requests
   useEffect(() => {
@@ -894,6 +926,18 @@ export default function FamilyTreePage() {
       {/* Regular family tree interface */}
       {!searchParam && (
         <>
+          {/* Tree Switcher */}
+          {userProfile?.familyTreeApproved && mySharedTrees.length > 0 && (
+            <div className="border-b bg-white px-4 py-2">
+              <TreeSwitcher
+                currentTreeOwner={ownerIdParam}
+                currentTreeName={ownerIdParam ? `${ownerName}'s Family Tree` : "My Family Tree"}
+                sharedTrees={mySharedTrees}
+                isOwnTree={!ownerIdParam}
+              />
+            </div>
+          )}
+
           {/* Toolbar - only for approved users */}
           {userProfile?.familyTreeApproved && (
             <FamilyTreeToolbar

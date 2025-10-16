@@ -90,6 +90,7 @@ export default function FamilyTreePage() {
     addMember,
     updateMember,
     addEdge,
+    removeEdge,
     removeMember,
     setSelectedNode,
     setEditingNode,

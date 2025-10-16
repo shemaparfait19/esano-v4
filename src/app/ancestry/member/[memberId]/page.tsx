@@ -28,6 +28,8 @@ export default function MemberProfilePage({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [allMembers, setAllMembers] = useState<FamilyMember[]>([]);
+
   useEffect(() => {
     let ignore = false;
     async function load() {
@@ -39,16 +41,11 @@ export default function MemberProfilePage({
         const data = (await res.json()) as TreeResponse;
         if (!res.ok) throw new Error((data as any)?.error || "Failed to load");
         if (ignore) return;
-        const allMembers = (data.tree.members || []) as any[];
+        const allMembers = (data.tree.members || []) as FamilyMember[];
         const found = allMembers.find((m: any) => m.id === memberId) || null;
         setMember(found);
+        setAllMembers(allMembers);
         setEdges((data.tree.edges || []) as any);
-        // Build name map for display
-        const map = new Map<string, string>();
-        allMembers.forEach((m: any) => {
-          map.set(m.id, m.fullName || m.firstName || m.id);
-        });
-        (window as any).__nameById = map; // debug/helper
       } catch (e: any) {
         if (!ignore) setError(e?.message || "Failed to load");
       } finally {
@@ -89,10 +86,17 @@ export default function MemberProfilePage({
     return Array.from(new Set(ids));
   }, [edges, member]);
 
+  // Create a map of member IDs to names
+  const memberNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    allMembers.forEach((m) => {
+      map.set(m.id, m.fullName || m.firstName || m.id);
+    });
+    return map;
+  }, [allMembers]);
+
   // helper to map id to display name
-  const toName = (id: string) =>
-    (typeof window !== "undefined" && (window as any).__nameById?.get(id)) ||
-    id;
+  const toName = (id: string) => memberNameMap.get(id) || id;
 
   if (loading) {
     return (

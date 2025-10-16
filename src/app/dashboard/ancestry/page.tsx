@@ -103,7 +103,7 @@ export default function AncestryBookPage() {
   
   // Get the member ID and owner ID from the URL if we're viewing a specific member
   const viewMemberId = searchParams?.get('memberId') || undefined;
-  const ownerId = searchParams?.get('ownerId') || null;
+  const [ownerId, setOwnerId] = useState<string | null>(searchParams?.get('ownerId') || null);
   const [accessible, setAccessible] = useState<
     Array<{ ownerId: string; label: string; role: "viewer" | "editor" }>
   >([]);

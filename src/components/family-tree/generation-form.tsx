@@ -26,6 +26,12 @@ interface GenerationFormProps {
   readonly?: boolean;
 }
 
+type FamilyMemberForm = Partial<FamilyMember> & {
+  spouseId?: string;
+  parentIds?: string[];
+  role?: string;
+};
+
 export function GenerationForm({
   members,
   onAdd,
@@ -33,15 +39,7 @@ export function GenerationForm({
   readonly,
 }: GenerationFormProps) {
   const [generation, setGeneration] = useState<number>(0);
-  const [rows, setRows] = useState<
-    Array<
-      Partial<FamilyMember> & {
-        spouseId?: string;
-        parentIds?: string[];
-        role?: string;
-      }
-    >
-  >([
+  const [rows, setRows] = useState<FamilyMemberForm[]>([
     {
       firstName: "",
       lastName: "",
@@ -49,7 +47,7 @@ export function GenerationForm({
       birthDate: "",
       deathDate: "",
       isDeceased: false,
-      email: undefined as any,
+      email: undefined,
       spouseId: undefined,
       parentIds: [],
       role: undefined,
@@ -57,10 +55,15 @@ export function GenerationForm({
   ]);
 
   const addRow = () => setRows((r) => [...r, { firstName: "", lastName: "" }]);
+
   const removeRow = (idx: number) =>
     setRows((r) => r.filter((_, i) => i !== idx));
 
-  const handleChange = (idx: number, field: keyof FamilyMember, value: any) => {
+  const handleChange = (
+    idx: number,
+    field: keyof FamilyMemberForm,
+    value: any
+  ) => {
     setRows((r) =>
       r.map((row, i) => (i === idx ? { ...row, [field]: value } : row))
     );
@@ -80,14 +83,10 @@ export function GenerationForm({
         birthDate: r.birthDate,
         deathDate: r.deathDate,
         isDeceased: !!r.isDeceased,
-        tags: Array.isArray(r.tags as any)
-          ? (r.tags as any as string[])
-          : r.role
-          ? [r.role]
-          : [],
+        tags: Array.isArray(r.tags) ? r.tags : r.role ? [r.role] : [],
         location: r.location,
-        notes: r.notes as any,
-        contacts: { email: (r as any).email },
+        notes: r.notes,
+        contacts: { email: r.email },
         customFields: {},
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -107,25 +106,30 @@ export function GenerationForm({
       toId: string;
       type: "parent" | "spouse";
     }> = [];
+
     rows.forEach((r, idx) => {
       const createdId = newMembers[idx]?.id;
       if (!createdId) return;
+
       if (Array.isArray(r.parentIds)) {
         r.parentIds.forEach((pid) => {
           if (pid) edges.push({ fromId: pid, toId: createdId, type: "parent" });
         });
       }
+
       if (r.spouseId) {
         edges.push({ fromId: createdId, toId: r.spouseId, type: "spouse" });
       }
     });
 
-    onAdd({ members: newMembers as any, edges });
+    onAdd({ members: newMembers, edges });
     if (onSave) onSave();
+
     toast({
       title: "Generation added",
       description: `Added ${newMembers.length} member(s)`,
     });
+
     setRows([{ firstName: "", lastName: "" }]);
   };
 
@@ -198,8 +202,8 @@ export function GenerationForm({
                 <div className="space-y-2">
                   <Label className="text-sm">Gender</Label>
                   <Select
-                    value={(row.gender as any) || ""}
-                    onValueChange={(v) => handleChange(idx, "gender", v as any)}
+                    value={row.gender || ""}
+                    onValueChange={(v) => handleChange(idx, "gender", v)}
                     disabled={readonly}
                   >
                     <SelectTrigger>
@@ -256,10 +260,8 @@ export function GenerationForm({
                   <Label className="text-sm">Email</Label>
                   <Input
                     type="email"
-                    value={(row as any).email || ""}
-                    onChange={(e) =>
-                      handleChange(idx, "email" as any, e.target.value)
-                    }
+                    value={row.email || ""}
+                    onChange={(e) => handleChange(idx, "email", e.target.value)}
                     disabled={readonly}
                     placeholder="email@example.com"
                   />
@@ -287,7 +289,7 @@ export function GenerationForm({
                 <div className="space-y-2">
                   <Label className="text-sm">Role</Label>
                   <Input
-                    value={(row as any).role || ""}
+                    value={row.role || ""}
                     onChange={(e) =>
                       setRows((r) =>
                         r.map((it, i) =>
@@ -302,7 +304,7 @@ export function GenerationForm({
                 <div className="space-y-2">
                   <Label className="text-sm">Spouse</Label>
                   <Select
-                    value={(row as any).spouseId || ""}
+                    value={row.spouseId || ""}
                     onValueChange={(v) =>
                       setRows((r) =>
                         r.map((it, i) =>
@@ -328,7 +330,7 @@ export function GenerationForm({
                   <Label className="text-sm">Parents</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Select
-                      value={(rows[idx] as any).parentIds?.[0] || ""}
+                      value={rows[idx]?.parentIds?.[0] || ""}
                       onValueChange={(v) =>
                         setRows((r) =>
                           r.map((it, i) =>
@@ -337,9 +339,8 @@ export function GenerationForm({
                                   ...it,
                                   parentIds: [
                                     v || undefined,
-                                    ((it as any).parentIds || [])[1] ||
-                                      undefined,
-                                  ].filter(Boolean) as any,
+                                    it.parentIds?.[1] || undefined,
+                                  ].filter(Boolean),
                                 }
                               : it
                           )
@@ -359,7 +360,7 @@ export function GenerationForm({
                       </SelectContent>
                     </Select>
                     <Select
-                      value={(rows[idx] as any).parentIds?.[1] || ""}
+                      value={rows[idx]?.parentIds?.[1] || ""}
                       onValueChange={(v) =>
                         setRows((r) =>
                           r.map((it, i) =>
@@ -367,10 +368,9 @@ export function GenerationForm({
                               ? {
                                   ...it,
                                   parentIds: [
-                                    ((it as any).parentIds || [])[0] ||
-                                      undefined,
+                                    it.parentIds?.[0] || undefined,
                                     v || undefined,
-                                  ].filter(Boolean) as any,
+                                  ].filter(Boolean),
                                 }
                               : it
                           )
@@ -401,10 +401,8 @@ export function GenerationForm({
               </h4>
               <div className="space-y-2">
                 <Textarea
-                  value={(row.notes as any) || ""}
-                  onChange={(e) =>
-                    handleChange(idx, "notes" as any, e.target.value)
-                  }
+                  value={row.notes || ""}
+                  onChange={(e) => handleChange(idx, "notes", e.target.value)}
                   disabled={readonly}
                   placeholder="Add notes, memories, or additional information..."
                   className="min-h-[100px] resize-y"

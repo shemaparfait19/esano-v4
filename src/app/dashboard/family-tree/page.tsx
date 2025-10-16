@@ -995,6 +995,7 @@ export default function FamilyTreePage() {
 
           {/* Tree viewport for approved users */}
           {userProfile?.familyTreeApproved && (
+          <>
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             <div className="flex-1 relative" id="tree-viewport">
               {/* Status badge removed for simplified table UI */}
@@ -1518,6 +1519,7 @@ export default function FamilyTreePage() {
               </div>
             </DialogContent>
           </Dialog>
+          </>
           )}
         </>
       )}

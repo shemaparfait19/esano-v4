@@ -123,11 +123,20 @@ export interface TreeVersion {
   }>;
 }
 
+export interface GenerationInfo {
+  generation: number;
+  name: string;
+  subHeadId?: string; // ID of the sub-head member
+  description?: string;
+  customFields?: Record<string, any>;
+}
+
 export interface FamilyTree {
   id: string;
   ownerId: string;
   members: FamilyMember[];
   edges: FamilyEdge[];
+  generations: GenerationInfo[]; // Information about each generation
   subfamilies?: Subfamily[]; // Optional sections within the main family
   settings: TreeSettings;
   annotations: TreeAnnotation[];

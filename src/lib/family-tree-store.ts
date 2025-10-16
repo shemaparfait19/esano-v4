@@ -80,6 +80,7 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
     tree: null,
     members: [],
     edges: [],
+    generations: [], // Added initial generations state
     layout: null,
     canvasState: {
       panX: 0,
@@ -111,6 +112,7 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
         tree,
         members: tree.members,
         edges: tree.edges,
+        generations: tree.generations || [], // Added generations update
         error: null,
         dirty: false,
       })),
@@ -314,6 +316,7 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
         tree: previous,
         members: previous.members,
         edges: previous.edges,
+        generations: previous.generations || [], // Added generations update
       });
     },
     redo: () => {
@@ -328,6 +331,7 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
         tree: next,
         members: next.members,
         edges: next.edges,
+        generations: next.generations || [], // Added generations update
       });
     },
 
@@ -401,6 +405,8 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
 // Selectors for performance
 export const selectMembers = (state: FamilyTreeState) => state.members;
 export const selectEdges = (state: FamilyTreeState) => state.edges;
+export const selectGenerations = (state: FamilyTreeState) =>
+  state.tree?.generations || [];
 export const selectLayout = (state: FamilyTreeState) => state.layout;
 export const selectCanvasState = (state: FamilyTreeState) => state.canvasState;
 export const selectSelectedNode = (state: FamilyTreeState) =>

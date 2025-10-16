@@ -63,8 +63,9 @@ import {
 } from "firebase/firestore";
 import { FamilyTreeApplicationForm } from "@/components/family-tree/application-form";
 import { FamilyTreeSuggestions } from "@/components/dashboard/family-tree-suggestions";
-// import { SubfamilyManager } from "@/components/family-tree/subfamily-manager";
 import { FamilyCodeGenerator } from "@/components/family-tree/family-code-generator";
+import { GenerationManager } from "@/components/family-tree/generation-manager";
+import { MemberView } from "@/components/family-tree/member-view";
 
 export default function FamilyTreePage() {
   const { user, userProfile } = useAuth();
@@ -157,6 +158,9 @@ export default function FamilyTreePage() {
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [lastPresenceWrite, setLastPresenceWrite] = useState<number>(0);
 
+  // Get the member ID from the URL if we're viewing a specific member
+  const viewMemberId = searchParams?.get('memberId') || undefined;
+  
   // Load family tree on mount
   useEffect(() => {
     if (user?.uid) {

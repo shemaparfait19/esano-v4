@@ -92,12 +92,18 @@ function inferRelations(
 
 export default function AncestryBookPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [tree, setTree] = useState<FamilyTree | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [anim, setAnim] = useState<"none" | "next" | "prev">("none");
   const [featuredMedia, setFeaturedMedia] = useState<
     Map<string, { url: string; type: "photo" | "video" }>
   >(new Map());
+  
+  // Get the member ID from the URL if we're viewing a specific member
+  const viewMemberId = searchParams?.get('memberId') || undefined;
+  const ownerId = searchParams?.get('ownerId') || undefined;
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [accessible, setAccessible] = useState<
     Array<{ ownerId: string; label: string; role: "viewer" | "editor" }>

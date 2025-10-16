@@ -82,9 +82,8 @@ export async function POST(request: Request) {
       if (nationalIdFile) {
         const fileName = `nationalId_${Date.now()}_${nationalIdFile.name}`;
         const fileBuffer = await nationalIdFile.arrayBuffer();
-        const base64Content = btoa(
-          String.fromCharCode(...new Uint8Array(fileBuffer))
-        );
+        const buffer = Buffer.from(fileBuffer);
+        const base64Content = buffer.toString('base64');
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({
@@ -111,9 +110,8 @@ export async function POST(request: Request) {
           proofOfFamilyFile.name
         }`;
         const fileBuffer = await proofOfFamilyFile.arrayBuffer();
-        const base64Content = btoa(
-          String.fromCharCode(...new Uint8Array(fileBuffer))
-        );
+        const buffer = Buffer.from(fileBuffer);
+        const base64Content = buffer.toString('base64');
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({
@@ -140,9 +138,8 @@ export async function POST(request: Request) {
           guardianConsentFile.name
         }`;
         const fileBuffer = await guardianConsentFile.arrayBuffer();
-        const base64Content = btoa(
-          String.fromCharCode(...new Uint8Array(fileBuffer))
-        );
+        const buffer = Buffer.from(fileBuffer);
+        const base64Content = buffer.toString('base64');
 
         // Store file in Firestore
         const fileDoc = await adminDb.collection("uploadedDocuments").add({

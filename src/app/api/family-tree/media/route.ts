@@ -53,9 +53,8 @@ export async function POST(request: Request) {
     
     // Convert to base64 and store in Firestore
     console.log('🔄 Converting to base64...');
-    const base64Content = btoa(
-      String.fromCharCode(...new Uint8Array(arrayBuffer))
-    );
+    const buffer = Buffer.from(arrayBuffer);
+    const base64Content = buffer.toString('base64');
     
     console.log('💾 Saving to Firestore uploadedDocuments collection...');
     const fileDoc = await adminDb.collection("uploadedDocuments").add({

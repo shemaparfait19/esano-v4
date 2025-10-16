@@ -444,7 +444,11 @@ export function MemberView({ memberId, onClose, onEdit, onView, className }: Mem
           {member.location && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                <span className="truncate">{member.location}</span>
+                <span className="truncate">
+                  {typeof member.location === 'object' && member.location
+                    ? `${member.location.village || ''}, ${member.location.district || ''}, ${member.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                    : member.location}
+                </span>
               </div>
             )}
           </div>
@@ -773,7 +777,9 @@ export function MemberView({ memberId, onClose, onEdit, onView, className }: Mem
                           <div className="font-medium">Born</div>
                           <div className="text-sm text-muted-foreground">
                             {formatDate(member.birthDate)}
-                            {member.location && ` • ${member.location}`}
+                            {member.location && ` • ${typeof member.location === 'object' && member.location
+                              ? `${member.location.village || ''}, ${member.location.district || ''}`.replace(/, $/g, '')
+                              : member.location}`}
                           </div>
                         </div>
                       </div>
@@ -906,7 +912,11 @@ export function MemberView({ memberId, onClose, onEdit, onView, className }: Mem
                         <Label className="text-muted-foreground">Location</Label>
                         <div className="flex items-center">
                           <MapPin className="h-4 w-4 mr-1" />
-                          <span>{member.location}</span>
+                          <span>
+                            {typeof member.location === 'object' && member.location
+                              ? `${member.location.village || ''}, ${member.location.cell || ''}, ${member.location.sector || ''}, ${member.location.district || ''}, ${member.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                              : member.location}
+                          </span>
                         </div>
                       </div>
                     )}

@@ -96,10 +96,10 @@ export function FamilyTreeApplicationForm() {
   const form = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema),
     defaultValues: {
-      fullName: "",
-      nationalId: "",
-      phoneNumber: "",
-      address: "",
+      fullName: userProfile?.displayName || userProfile?.fullName || "",
+      nationalId: userProfile?.nationalId || "",
+      phoneNumber: userProfile?.phone || userProfile?.phoneNumber || "",
+      address: userProfile?.address || "",
       reasonForTree: "",
       familyBackground: "",
       expectedMembers: 10,

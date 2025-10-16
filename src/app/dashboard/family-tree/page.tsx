@@ -897,109 +897,105 @@ export default function FamilyTreePage() {
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-muted">
                       Shared from {ownerName || "Owner"}
                     </span>
-                    {viewerRole && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs">
-                        {viewerRole === "editor" ? "Editor" : "Viewer"}
-                      </span>
-                    )}
-                  </div>
-                )}
-                <Button
-                  onClick={handleAddMember}
-                  size="sm"
-                  disabled={readonly}
-                  className="whitespace-nowrap"
-                >
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Add Member
-                </Button>
-                {/* Relationship management will be handled via table/editor */}
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="hidden sm:flex items-center text-xs text-muted-foreground mr-2 min-w-[90px] justify-end">
-                  {dirty ? (
-                    isSaving ? (
-                      <span>Saving…</span>
-                    ) : (
-                      <span>Unsaved changes</span>
-                    )
-                  ) : (
-                    <span>Saved</span>
                   )}
                 </div>
-                <div className="hidden sm:flex items-center gap-1.5">
+
+                <div className="flex-1" />
+
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center text-xs text-muted-foreground mr-2 min-w-[90px] justify-end">
+                    {dirty ? (
+                      isSaving ? (
+                        <span>Saving…</span>
+                      ) : (
+                        <span>Unsaved changes</span>
+                      )
+                    ) : (
+                      <span>Saved</span>
+                    )}
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={undo}
+                      disabled={readonly}
+                      className="h-8 px-2"
+                      title="Undo"
+                    >
+                      <Undo2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={redo}
+                      disabled={readonly}
+                      className="h-8 px-2"
+                      title="Redo"
+                    >
+                      <Redo2 className="h-4 w-4" />
+                    </Button>
+                    <div className="w-px h-6 bg-border mx-1" />
+                  </div>
+
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={undo}
-                    disabled={readonly}
-                    className="h-8 px-2"
-                    title="Undo"
+                    onClick={handleExport}
+                    className="h-8 px-2 hidden sm:flex"
+                    title="Export"
                   >
-                    <Undo2 className="h-4 w-4" />
+                    <Download className="h-4 w-4" />
                   </Button>
+
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={redo}
-                    disabled={readonly}
-                    className="h-8 px-2"
-                    title="Redo"
+                    onClick={handleToggleFullscreen}
+                    className="h-8 px-2 hidden sm:flex"
+                    title="Fullscreen"
                   >
-                    <Redo2 className="h-4 w-4" />
+                    <Maximize2 className="h-4 w-4" />
                   </Button>
-                  <div className="w-px h-6 bg-border mx-1" />
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleAISuggestions}
+                    className="h-8 px-2 hidden md:flex"
+                    title="AI Suggestions"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+
+                  {!ownerIdParam && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShareDialogOpen(true)}
+                      className="whitespace-nowrap h-8"
+                    >
+                      Share {shares.length > 0 && `(${shares.length})`}
+                    </Button>
+                  )}
                 </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleExport}
-                  className="h-8 px-2 hidden sm:flex"
-                  title="Export"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleToggleFullscreen}
-                  className="h-8 px-2 hidden sm:flex"
-                  title="Fullscreen"
-                >
-                  <Maximize2 className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleAISuggestions}
-                  className="h-8 px-2 hidden md:flex"
-                  title="AI Suggestions"
-                >
-                  <Sparkles className="h-4 w-4" />
-                </Button>
-
-                {!ownerIdParam && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShareDialogOpen(true)}
-                    className="whitespace-nowrap h-8"
-                  >
-                    Share {shares.length > 0 && `(${shares.length})`}
-                  </Button>
-                )}
               </div>
             </div>
-          </div>
+          )}
 
           {(!tree || (tree?.members?.length || 0) === 0) && !ownerIdParam && (
             <div className="flex-none border-b bg-white/60">
               <div className="px-4 py-6">
-                {!userProfile?.familyTreeApproved &&
+                {!userProfile?.familyTreeApproved && (
+                  <FamilyTreeApplicationForm />
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
                 !userProfile?.familyCode ? (
                   <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-6">

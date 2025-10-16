@@ -434,6 +434,8 @@ export default function FamilyTreePage() {
 
       // Clean up orphaned edges before setting the tree
       if (data.tree && data.tree.members && data.tree.edges) {
+        console.log('📊 Before cleanup - Members:', data.tree.members.length, 'Edges:', data.tree.edges.length);
+        
         const { cleanedEdges, removedCount, removedEdges } = cleanupOrphanedEdges(
           data.tree.members,
           data.tree.edges
@@ -458,6 +460,8 @@ export default function FamilyTreePage() {
             console.error("Failed to save cleaned tree:", saveError);
           }
         }
+        
+        console.log('📊 After cleanup - Members:', data.tree.members.length, 'Edges:', data.tree.edges.length);
       }
 
       setTree(data.tree);
@@ -1275,6 +1279,8 @@ export default function FamilyTreePage() {
                   <GenerationForm
                     members={members as any}
                     onAdd={({ members: newMembers, edges: newEdges }) => {
+                      console.log('📝 Adding generation:', newMembers.length, 'members,', newEdges.length, 'edges');
+                      
                       newMembers.forEach((m) =>
                         addMember({
                           firstName: m.firstName,
@@ -1290,14 +1296,23 @@ export default function FamilyTreePage() {
                           customFields: {},
                         })
                       );
-                      newEdges.forEach((e) =>
+                      
+                      newEdges.forEach((e) => {
+                        console.log('➕ Adding edge:', e.type, 'from', e.fromId, 'to', e.toId);
                         addEdge({
                           fromId: e.fromId,
                           toId: e.toId,
                           type: e.type as any,
-                        })
-                      );
+                        });
+                      });
+                      
                       setDirty(true);
+                      
+                      // Save immediately to persist edges
+                      setTimeout(() => {
+                        console.log('💾 Saving tree with edges...');
+                        saveFamilyTree();
+                      }, 100);
                     }}
                     onSave={saveFamilyTree}
                   />

@@ -1247,6 +1247,7 @@ export default function FamilyTreePage() {
                           firstName: m.firstName,
                           lastName: m.lastName,
                           fullName: m.fullName,
+                          generation: (m as any).generation,
                           birthDate: m.birthDate,
                           deathDate: m.deathDate,
                           gender: m.gender,

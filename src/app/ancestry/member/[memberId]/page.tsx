@@ -93,6 +93,56 @@ export default function MemberProfilePage({
     return new RelationshipInferenceEngine(allMembers, edges);
   }, [allMembers, edges, member]);
 
+  const handleDocumentDownload = (e: React.MouseEvent, doc: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const url = typeof doc === 'string' ? doc : doc.url;
+    let name = typeof doc === 'object' && doc.name ? doc.name : 'document';
+    
+    if (url && url.startsWith('data:')) {
+      try {
+        const [header, base64] = url.split(',');
+        const mimeMatch = header.match(/data:([^;]+)/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+        
+        const extensionMap: Record<string, string> = {
+          'application/pdf': '.pdf',
+          'application/msword': '.doc',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+          'application/vnd.ms-excel': '.xls',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+          'text/plain': '.txt',
+        };
+        
+        if (!name.includes('.') && extensionMap[mimeType]) {
+          name += extensionMap[mimeType];
+        }
+        
+        const byteString = atob(base64);
+        const arrayBuffer = new ArrayBuffer(byteString.length);
+        const uint8Array = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < byteString.length; i++) {
+          uint8Array[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([uint8Array], { type: mimeType });
+        
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      } catch (err) {
+        console.error('Document download error:', err);
+      }
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -320,14 +370,13 @@ export default function MemberProfilePage({
                 <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <a 
-                  href={typeof doc === 'string' ? doc : doc.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex-1 text-sm text-blue-600 hover:underline"
+                <button
+                  onClick={(e) => handleDocumentDownload(e, doc)}
+                  className="flex-1 text-sm text-blue-600 hover:underline text-left cursor-pointer"
+                  type="button"
                 >
                   {typeof doc === 'object' && doc.name ? doc.name : `Document ${i + 1}`}
-                </a>
+                </button>
               </div>
             ))}
           </div>

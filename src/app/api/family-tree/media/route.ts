@@ -176,9 +176,15 @@ export async function POST(request: Request) {
     console.log('✅ Upload complete:', fileUrl);
     return NextResponse.json({ success: true, url: fileUrl });
   } catch (e: any) {
-    console.error("Media upload error:", e);
+    console.error("❌ Media upload error:", e);
+    console.error("❌ Error stack:", e?.stack);
+    console.error("❌ Error details:", JSON.stringify(e, null, 2));
     return NextResponse.json(
-      { error: "Upload failed", detail: String(e?.message || e) },
+      { 
+        error: "Upload failed", 
+        detail: String(e?.message || e),
+        stack: e?.stack,
+      },
       { status: 500 }
     );
   }

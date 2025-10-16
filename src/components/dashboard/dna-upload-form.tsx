@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-// import { analyzeDna } from "@/app/actions";
+import { analyzeDna } from "@/app/actions";
 import { useAppContext } from "@/contexts/app-context";
 import { UploadCloud, File, Loader2, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -94,8 +94,7 @@ export function DnaUploadForm() {
           );
         }
 
-        // Read file contents
-        // Save raw file to Storage via API (do not analyze here)
+        // Step 1: Upload file to storage
         const fd = new FormData();
         fd.set("userId", user.uid);
         fd.set("file", file);
@@ -107,8 +106,35 @@ export function DnaUploadForm() {
         if (!resp.ok) {
           throw new Error(data?.error || "Upload failed");
         }
-        setAnalysisCompleted(false);
-        toast({ title: "DNA file saved", description: data.fileName });
+        
+        toast({ 
+          title: "DNA file saved", 
+          description: "Now analyzing your DNA..." 
+        });
+
+        // Step 2: Analyze DNA automatically
+        const fileText = await file.text();
+        const analysisResult = await analyzeDna(user.uid, fileText, file.name);
+        
+        if (analysisResult.error) {
+          toast({
+            title: "Analysis completed with warnings",
+            description: analysisResult.error,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Analysis Complete!",
+            description: "Your insights are ready. Check Insights, Relatives, and Ancestry pages.",
+          });
+        }
+        
+        setAnalysisCompleted(true);
+        
+        // Refresh to load new analysis data
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } catch (error) {
         toast({
           title: "Analysis Failed",
@@ -207,10 +233,10 @@ export function DnaUploadForm() {
         {isPending ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Uploading...
+            Uploading & Analyzing...
           </>
         ) : (
-          "Upload & Save"
+          "Upload & Analyze DNA"
         )}
       </Button>
     </div>

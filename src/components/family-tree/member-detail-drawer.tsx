@@ -437,8 +437,8 @@ export function MemberDetailDrawer({
                 <div>
                   <Label>Extra relation (optional)</Label>
                   <Select
-                    value={(relExtraType as any) || ""}
-                    onValueChange={(v) => setRelExtraType(v as any)}
+                    value={(relExtraType as any) || "none"}
+                    onValueChange={(v) => setRelExtraType(v === "none" ? "" : (v as any))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />

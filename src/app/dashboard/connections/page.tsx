@@ -33,20 +33,33 @@ export default function ConnectionsPage() {
         
         // Query connections collection for this user
         const connectionsRef = collection(db, "connections");
-        const q = query(
-          connectionsRef,
-          where("participants", "array-contains", user.uid),
-          where("status", "in", ["connected", "accepted"])
-        );
-
-        const snapshot = await getDocs(q);
-        console.log('[Connections] Found', snapshot.size, 'connections');
+        
+        // Query both 'connected' and 'accepted' statuses separately (Firestore limitation)
+        const [connectedDocs, acceptedDocs] = await Promise.all([
+          getDocs(
+            query(
+              connectionsRef,
+              where("participants", "array-contains", user.uid),
+              where("status", "==", "connected")
+            )
+          ),
+          getDocs(
+            query(
+              connectionsRef,
+              where("participants", "array-contains", user.uid),
+              where("status", "==", "accepted")
+            )
+          ),
+        ]);
+        
+        const allDocs = [...connectedDocs.docs, ...acceptedDocs.docs];
+        console.log('[Connections] Found', allDocs.length, 'connections');
 
         // Get all connected user IDs
         const connectedUserIds = new Set<string>();
         const connectionDates = new Map<string, string>();
 
-        snapshot.docs.forEach((doc) => {
+        allDocs.forEach((doc) => {
           const data = doc.data();
           const participants = data.participants || [];
           const otherUserId = participants.find((id: string) => id !== user.uid);

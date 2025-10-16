@@ -346,7 +346,7 @@ export function MemberDetailDrawer({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="max-w-3xl max-h-[90vh] flex flex-col"
         aria-describedby="member-detail-desc"
       >
         <DialogHeader>
@@ -356,7 +356,7 @@ export function MemberDetailDrawer({
           Edit personal details, upload memories and manage timeline for this
           family member.
         </p>
-        <div className="overflow-y-auto pr-2">
+        <div className="overflow-y-auto max-h-[calc(90vh-100px)] pr-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label>Full name</Label>
@@ -704,9 +704,14 @@ export function MemberDetailDrawer({
               </div>
             </div>
             <div>
-              <Label>Upload photo/video</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label>Upload photo/video</Label>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded font-medium">
+                  Max: 2MB
+                </span>
+              </div>
               <p className="text-xs text-muted-foreground mb-1">
-                Recommended: Keep files under 1MB for best performance. Max: 2MB
+                Recommended: Keep files under 1MB for best performance
               </p>
               <Input
                 type="file"
@@ -736,9 +741,14 @@ export function MemberDetailDrawer({
               />
             </div>
             <div>
-              <Label>Upload voice</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label>Upload voice</Label>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded font-medium">
+                  Max: 50MB
+                </span>
+              </div>
               <p className="text-xs text-muted-foreground mb-1">
-                Recommended: Keep audio under 5MB. Max: 50MB
+                Recommended: Keep audio under 5MB
               </p>
               <Input
                 type="file"
@@ -776,9 +786,14 @@ export function MemberDetailDrawer({
               )}
             </div>
             <div>
-              <Label>Upload documents (PDF, Word, etc.)</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label>Upload documents (PDF, Word, etc.)</Label>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded font-medium">
+                  Max: 50MB
+                </span>
+              </div>
               <p className="text-xs text-muted-foreground mb-1">
-                Recommended: Keep documents under 5MB. Max: 50MB
+                Recommended: Keep documents under 5MB
               </p>
               <Input
                 type="file"
@@ -826,9 +841,14 @@ export function MemberDetailDrawer({
               )}
             </div>
             <div>
-              <Label>Add timeline media</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label>Add timeline media</Label>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded font-medium">
+                  Max: 2MB
+                </span>
+              </div>
               <p className="text-xs text-muted-foreground mb-1">
-                Recommended: Keep files under 1MB. Max: 2MB
+                Recommended: Keep files under 1MB
               </p>
               <Input
                 type="file"

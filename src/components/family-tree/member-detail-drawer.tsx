@@ -357,11 +357,20 @@ export function MemberDetailDrawer({
               </div>
             </div>
             <Label>Location in Rwanda</Label>
-            <LocationSelector
-              value={typeof draft.location === 'object' && draft.location ? draft.location as any : undefined}
-              onChange={(loc) => handleField("location", loc as any)}
-              disabled={readonly}
-            />
+            {(() => {
+              console.log('🔍 Draft location:', draft.location, 'Type:', typeof draft.location);
+              const locationValue = (draft.location && typeof draft.location === 'object' && !Array.isArray(draft.location)) 
+                ? draft.location as any 
+                : undefined;
+              console.log('📍 Passing to LocationSelector:', locationValue);
+              return (
+                <LocationSelector
+                  value={locationValue}
+                  onChange={(loc) => handleField("location", loc as any)}
+                  disabled={readonly}
+                />
+              );
+            })()}
             <Label>Tags (comma separated)</Label>
             <Input
               value={(draft.tags || []).join(", ")}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { Buffer } from "buffer";
 import { adminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
@@ -8,13 +9,16 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
+    console.log('📤 Upload request received');
     const form = await request.formData();
     const userId = form.get("userId") as string;
     const memberId = form.get("memberId") as string;
     const file = form.get("file") as File | null;
-    const kind = (form.get("kind") as string) || "media"; // media | voice | timeline
+    const kind = (form.get("kind") as string) || "media"; // media | voice | timeline | document
     const title = (form.get("title") as string) || undefined;
     const date = (form.get("date") as string) || new Date().toISOString();
+    
+    console.log('📋 Upload details:', { userId, memberId, kind, fileName: file?.name });
 
     if (!userId || !memberId || !file) {
       return NextResponse.json(
@@ -24,8 +28,10 @@ export async function POST(request: Request) {
     }
 
     // Save file to local uploads folder
+    console.log('💾 Reading file buffer...');
     const arrayBuffer = await file.arrayBuffer();
     const MAX_BYTES = 50 * 1024 * 1024; // 50 MB limit
+    console.log(`📊 File size: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
     if (arrayBuffer.byteLength > MAX_BYTES) {
       return NextResponse.json(
         { error: "File too large. Max 50 MB." },
@@ -50,15 +56,19 @@ export async function POST(request: Request) {
     
     // Create directory if it doesn't exist
     const uploadDir = join(process.cwd(), 'public', 'uploads', folder);
+    console.log('📁 Creating directory:', uploadDir);
     await mkdir(uploadDir, { recursive: true });
     
     // Save file
     const filePath = join(uploadDir, filename);
+    console.log('💾 Saving file to:', filePath);
     const buffer = Buffer.from(arrayBuffer);
     await writeFile(filePath, buffer);
+    console.log('✅ File saved successfully');
     
     // Public URL path
     const fileUrl = `/uploads/${folder}/${filename}`;
+    console.log('🔗 Public URL:', fileUrl);
 
     const ref = adminDb.collection("familyTrees").doc(userId);
     const snap = await ref.get();
@@ -140,7 +150,9 @@ export async function POST(request: Request) {
 
     tree.updatedAt = new Date().toISOString();
     // Merge to reduce overwrite risks
+    console.log('💾 Saving to Firestore...');
     await ref.set(tree, { merge: true } as any);
+    console.log('✅ Upload complete:', fileUrl);
     return NextResponse.json({ success: true, url: fileUrl });
   } catch (e: any) {
     console.error("Media upload error:", e);

@@ -38,12 +38,22 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
 
   // Update state when value prop changes (for editing existing members)
   useEffect(() => {
-    if (value?.province) setProvince(value.province);
-    if (value?.district) setDistrict(value.district);
-    if (value?.sector) setSector(value.sector);
-    if (value?.cell) setCell(value.cell);
-    if (value?.village) setVillage(value.village);
-  }, [value]);
+    console.log('📍 LocationSelector received value:', value);
+    if (value && typeof value === 'object') {
+      setProvince(value.province || "");
+      setDistrict(value.district || "");
+      setSector(value.sector || "");
+      setCell(value.cell || "");
+      setVillage(value.village || "");
+    } else {
+      // Reset if no value
+      setProvince("");
+      setDistrict("");
+      setSector("");
+      setCell("");
+      setVillage("");
+    }
+  }, [value?.province, value?.district, value?.sector, value?.cell, value?.village]);
 
   // Get provinces
   const provinces = useMemo(() => Object.keys(rwandaLocations), []);

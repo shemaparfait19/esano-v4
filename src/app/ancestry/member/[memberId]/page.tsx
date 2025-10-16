@@ -162,9 +162,16 @@ export default function MemberProfilePage({
               Birthplace / Residence
             </div>
             <div className="text-sm">
-              {typeof member.location === 'object' && member.location?.village
-                ? `${member.location.village}, ${member.location.cell}, ${member.location.sector}, ${member.location.district}, ${member.location.province}`
-                : member.location || "—"}
+              {(() => {
+                console.log('📍 Member location:', member.location, 'Type:', typeof member.location);
+                if (member.location && typeof member.location === 'object' && !Array.isArray(member.location)) {
+                  const loc = member.location as any;
+                  if (loc.village || loc.district || loc.province) {
+                    return `${loc.village || ''}, ${loc.cell || ''}, ${loc.sector || ''}, ${loc.district || ''}, ${loc.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '');
+                  }
+                }
+                return typeof member.location === 'string' ? member.location : "—";
+              })()}
             </div>
           </div>
         </Card>

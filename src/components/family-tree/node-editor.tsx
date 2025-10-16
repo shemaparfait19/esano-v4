@@ -393,7 +393,11 @@ export function NodeEditor({
           <Label htmlFor="location">Location</Label>
           <Input
             id="location"
-            value={formData.location || ""}
+            value={
+              typeof formData.location === 'object' && formData.location
+                ? `${formData.location.village || ''}, ${formData.location.cell || ''}, ${formData.location.sector || ''}, ${formData.location.district || ''}, ${formData.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                : (formData.location || "")
+            }
             onChange={(e) => handleInputChange("location", e.target.value)}
             placeholder="Birth place, residence, etc."
           />

@@ -9,7 +9,6 @@ import { GenerationForm } from "@/components/family-tree/generation-form";
 import { MembersTable } from "@/components/family-tree/members-table";
 import { MemberDetailDrawer } from "@/components/family-tree/member-detail-drawer";
 import { TreeToolbar } from "@/components/family-tree/tree-toolbar";
-import { NodeEditor } from "@/components/family-tree/node-editor";
 import { RelationshipsTable } from "@/components/family-tree/relationships-table";
 import { AdvancedSearch } from "@/components/family-tree/advanced-search";
 import { FamilyMember, FamilyEdge } from "@/types/family-tree";

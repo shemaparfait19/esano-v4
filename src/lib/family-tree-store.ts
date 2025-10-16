@@ -127,11 +127,11 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
     addMember: (memberData) => {
       const newMember: FamilyMember = {
         ...memberData,
-        id: `member_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        createdAt: new Date().toISOString(),
+        id: memberData.id || `member_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: memberData.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        xp: 0,
-        level: 1,
+        xp: memberData.xp ?? 0,
+        level: memberData.level ?? 1,
       };
 
       set((state) => {

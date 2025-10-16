@@ -1282,21 +1282,11 @@ export default function FamilyTreePage() {
                     onAdd={({ members: newMembers, edges: newEdges }) => {
                       console.log('📝 Adding generation:', newMembers.length, 'members,', newEdges.length, 'edges');
                       
-                      newMembers.forEach((m) =>
-                        addMember({
-                          firstName: m.firstName,
-                          lastName: m.lastName,
-                          fullName: m.fullName,
-                          generation: (m as any).generation,
-                          birthDate: m.birthDate,
-                          deathDate: m.deathDate,
-                          gender: m.gender,
-                          tags: m.tags || [],
-                          location: m.location,
-                          notes: m.notes,
-                          customFields: {},
-                        })
-                      );
+                      // Add members with their IDs preserved
+                      newMembers.forEach((m) => {
+                        console.log('  ➕ Adding member:', m.id, m.fullName);
+                        addMember(m as any);
+                      });
                       
                       newEdges.forEach((e) => {
                         console.log('➕ Adding edge:', e.type, 'from', e.fromId, 'to', e.toId);

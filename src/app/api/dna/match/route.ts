@@ -52,10 +52,14 @@ export async function POST(req: Request) {
     // Parse user's DNA with quality filtering
     const userSNPs = parseAndFilterSNPs(dnaText);
 
-    // Adjustable threshold - lower for testing, but less accurate
-    const MIN_SNPS = parseInt(process.env.MIN_SNPS_THRESHOLD || "10");
+    // Minimum 500 SNPs required for reliable genetic comparison
+    const MIN_SNPS = 500;
 
-    const lowSnp = userSNPs.length < MIN_SNPS;
+    if (userSNPs.length < MIN_SNPS) {
+      return NextResponse.json({
+        error: `Insufficient SNP markers. Found ${userSNPs.length}, need at least ${MIN_SNPS} for accurate matching. Please upload a valid DNA test file from 23andMe, AncestryDNA, or MyHeritage.`,
+      }, { status: 400 });
+    }
 
     // Fetch all active DNA files metadata
     const snap = await adminDb.collection("dna_data").get();
@@ -177,43 +181,25 @@ export async function POST(req: Request) {
     for (const candidate of candidates) {
       try {
         const candidateSNPs = parseAndFilterSNPs(candidate.text);
-        const lowOverlap = userSNPs.length < 200 || candidateSNPs.length < 200;
+        
+        // Skip candidates with insufficient SNPs
+        if (candidateSNPs.length < MIN_SNPS) {
+          continue;
+        }
 
-        if (lowOverlap) {
-          // Basic similarity fallback for small inputs (VCF/raw string)
-          const score = basicSimilarity(dnaText, candidate.text);
-          const rel = interpretSimilarity(score);
+        // Perform comprehensive kinship analysis
+        const analysis = analyzeKinship(userSNPs, candidateSNPs);
+
+        // Only include matches with sufficient overlap and meaningful relationships
+        if (analysis.metrics.totalSNPs >= 500 && analysis.confidence >= 50) {
           matches.push({
             userId: candidate.userId,
             fileName: candidate.fileName,
-            relationship: rel.relationship,
-            confidence: rel.confidence,
-            details: `Low-SNP fallback similarity: ${score}%`,
-            metrics: {
-              totalSNPs: 0,
-              ibdSegments: 0,
-              totalIBD_cM: 0,
-              ibs0: 0,
-              ibs1: 0,
-              ibs2: 0,
-              kinshipCoefficient: 0,
-            },
+            relationship: analysis.relationship,
+            confidence: analysis.confidence,
+            details: analysis.details,
+            metrics: analysis.metrics,
           });
-        } else {
-          // Perform comprehensive kinship analysis
-          const analysis = analyzeKinship(userSNPs, candidateSNPs);
-
-          // Only include matches with sufficient data quality
-          if (analysis.metrics.totalSNPs >= 200) {
-            matches.push({
-              userId: candidate.userId,
-              fileName: candidate.fileName,
-              relationship: analysis.relationship,
-              confidence: analysis.confidence,
-              details: analysis.details,
-              metrics: analysis.metrics,
-            });
-          }
         }
       } catch (err) {
         console.error(`Error analyzing candidate ${candidate.userId}:`, err);

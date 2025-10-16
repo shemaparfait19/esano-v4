@@ -8,6 +8,7 @@ import {
   Edit,
   ChevronDown,
   ChevronRight,
+  UserPlus,
 } from "lucide-react";
 
 interface FamilyMember {
@@ -28,7 +29,7 @@ interface FamilyMember {
 interface FamilyEdge {
   fromId: string;
   toId: string;
-  type: string; // allow extended relationship types
+  type: string;
 }
 
 interface MembersTableProps {
@@ -37,6 +38,7 @@ interface MembersTableProps {
   onOpen?: (memberId: string) => void;
   onView?: (memberId: string) => void;
   onAiSuggest?: () => void;
+  onAddMember?: (generation: number) => void;
   ownerId?: string;
 }
 
@@ -46,6 +48,7 @@ export function MembersTable({
   onOpen,
   onView,
   onAiSuggest,
+  onAddMember,
   ownerId,
 }: MembersTableProps) {
   const [expandedGen, setExpandedGen] = useState<Record<number, boolean>>({});
@@ -122,7 +125,7 @@ export function MembersTable({
     return map;
   }, [edges]);
 
-  // Siblings/relatives via explicit non-parent/spouse types
+  // Siblings via explicit sibling types
   const siblingsOf = useMemo(() => {
     const map: Record<string, string[]> = {};
     const siblingTypes = new Set([
@@ -130,6 +133,21 @@ export function MembersTable({
       "little_brother",
       "big_sister",
       "little_sister",
+      "sibling",
+    ]);
+    edges.forEach((e) => {
+      if (siblingTypes.has(e.type as any)) {
+        (map[e.fromId] = map[e.fromId] || []).push(e.toId);
+        (map[e.toId] = map[e.toId] || []).push(e.fromId);
+      }
+    });
+    return map;
+  }, [edges]);
+
+  // Other relatives (aunt, uncle, cousin, guardian, etc.)
+  const otherRelativesOf = useMemo(() => {
+    const map: Record<string, Array<{ id: string; type: string }>> = {};
+    const otherTypes = new Set([
       "aunt",
       "uncle",
       "cousin_big",
@@ -138,9 +156,15 @@ export function MembersTable({
       "other",
     ]);
     edges.forEach((e) => {
-      if (siblingTypes.has(e.type as any)) {
-        (map[e.fromId] = map[e.fromId] || []).push(e.toId);
-        (map[e.toId] = map[e.toId] || []).push(e.fromId);
+      if (otherTypes.has(e.type as any)) {
+        (map[e.fromId] = map[e.fromId] || []).push({
+          id: e.toId,
+          type: e.type,
+        });
+        (map[e.toId] = map[e.toId] || []).push({
+          id: e.fromId,
+          type: e.type,
+        });
       }
     });
     return map;
@@ -180,9 +204,25 @@ export function MembersTable({
     if (onView) {
       onView(memberId);
     } else if (ownerId) {
-      // Fallback to navigation if onView is not provided
       window.location.href = `/ancestry/member/${memberId}?ownerId=${ownerId}`;
     }
+  };
+
+  const handleAddMember = (generation: number) => {
+    if (onAddMember) {
+      onAddMember(generation);
+    }
+  };
+
+  // Check if member has any relationships
+  const hasRelationships = (memberId: string) => {
+    return (
+      (spouseOf[memberId]?.length ?? 0) > 0 ||
+      (parentsOf[memberId]?.length ?? 0) > 0 ||
+      (childrenOf[memberId]?.length ?? 0) > 0 ||
+      (siblingsOf[memberId]?.length ?? 0) > 0 ||
+      (otherRelativesOf[memberId]?.length ?? 0) > 0
+    );
   };
 
   return (
@@ -222,19 +262,30 @@ export function MembersTable({
           <div key={gen} className="border-b border-gray-200">
             {/* Generation Header */}
             <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 px-6 py-4 sticky left-0 border-b border-emerald-200">
-              <div className="flex items-center gap-3">
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-md">
-                  {gen}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-md">
+                    {gen}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-emerald-900">
+                      Generation {gen}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {groupedByGeneration[gen].length} member
+                      {groupedByGeneration[gen].length !== 1 ? "s" : ""}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-emerald-900">
-                    Generation {gen}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {groupedByGeneration[gen].length} member
-                    {groupedByGeneration[gen].length !== 1 ? "s" : ""}
-                  </p>
-                </div>
+                {onAddMember && (
+                  <button
+                    onClick={() => handleAddMember(gen)}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Add Member
+                  </button>
+                )}
               </div>
             </div>
 
@@ -299,42 +350,59 @@ export function MembersTable({
                       <div className="text-xs text-gray-700 space-y-1">
                         {spouseOf[m.id]?.length > 0 && (
                           <div>
-                            Spouse:{" "}
+                            <span className="font-semibold text-gray-600">
+                              Spouse:
+                            </span>{" "}
                             {spouseOf[m.id]
-                              .map((id) => byId[id]?.firstName)
+                              .map((id) => byId[id]?.fullName || "Unknown")
                               .join(", ")}
                           </div>
                         )}
                         {parentsOf[m.id]?.length > 0 && (
                           <div>
-                            Parents:{" "}
+                            <span className="font-semibold text-gray-600">
+                              Parents:
+                            </span>{" "}
                             {parentsOf[m.id]
-                              .map((id) => byId[id]?.firstName)
+                              .map((id) => byId[id]?.fullName || "Unknown")
                               .join(", ")}
                           </div>
                         )}
                         {childrenOf[m.id]?.length > 0 && (
                           <div>
-                            Children:{" "}
+                            <span className="font-semibold text-gray-600">
+                              Children:
+                            </span>{" "}
                             {childrenOf[m.id]
-                              .map((id) => byId[id]?.firstName)
+                              .map((id) => byId[id]?.fullName || "Unknown")
                               .join(", ")}
                           </div>
                         )}
                         {siblingsOf[m.id]?.length > 0 && (
                           <div>
-                            Siblings/Relatives:{" "}
+                            <span className="font-semibold text-gray-600">
+                              Siblings:
+                            </span>{" "}
                             {siblingsOf[m.id]
-                              .map((id) => byId[id]?.firstName)
+                              .map((id) => byId[id]?.fullName || "Unknown")
                               .join(", ")}
                           </div>
                         )}
-                        {!spouseOf[m.id]?.length &&
-                          !parentsOf[m.id]?.length &&
-                          !childrenOf[m.id]?.length &&
-                          !siblingsOf[m.id]?.length && (
-                            <div className="text-gray-400">No relations</div>
-                          )}
+                        {otherRelativesOf[m.id]?.length > 0 && (
+                          <div>
+                            <span className="font-semibold text-gray-600">
+                              Other:
+                            </span>{" "}
+                            {otherRelativesOf[m.id]
+                              .map((rel) => byId[rel.id]?.fullName || "Unknown")
+                              .join(", ")}
+                          </div>
+                        )}
+                        {!hasRelationships(m.id) && (
+                          <div className="text-gray-400 italic">
+                            No relations
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="py-4 px-4">
@@ -442,6 +510,19 @@ export function MembersTable({
               )}
             </button>
 
+            {/* Add Member Button (Mobile) */}
+            {onAddMember && expandedGen[gen] && (
+              <div className="px-4 py-3 bg-emerald-50/50 border-b border-emerald-200">
+                <button
+                  onClick={() => handleAddMember(gen)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add Member to Generation {gen}
+                </button>
+              </div>
+            )}
+
             {/* Member Cards */}
             {expandedGen[gen] && (
               <div className="divide-y divide-gray-200">
@@ -506,40 +587,76 @@ export function MembersTable({
                     </div>
 
                     {/* Relations */}
-                    {(spouseOf[m.id]?.length > 0 ||
-                      parentsOf[m.id]?.length > 0 ||
-                      childrenOf[m.id]?.length > 0) && (
+                    {hasRelationships(m.id) ? (
                       <div className="bg-gray-50 rounded-lg p-3 mb-3 text-xs space-y-1.5">
                         {spouseOf[m.id]?.length > 0 && (
                           <div>
-                            <span className="text-gray-500">Spouse:</span>{" "}
+                            <span className="text-gray-600 font-semibold">
+                              Spouse:
+                            </span>{" "}
                             <span className="text-gray-900 font-medium">
                               {spouseOf[m.id]
-                                .map((id) => byId[id]?.firstName)
+                                .map((id) => byId[id]?.fullName || "Unknown")
                                 .join(", ")}
                             </span>
                           </div>
                         )}
                         {parentsOf[m.id]?.length > 0 && (
                           <div>
-                            <span className="text-gray-500">Parents:</span>{" "}
+                            <span className="text-gray-600 font-semibold">
+                              Parents:
+                            </span>{" "}
                             <span className="text-gray-900 font-medium">
                               {parentsOf[m.id]
-                                .map((id) => byId[id]?.firstName)
+                                .map((id) => byId[id]?.fullName || "Unknown")
                                 .join(", ")}
                             </span>
                           </div>
                         )}
                         {childrenOf[m.id]?.length > 0 && (
                           <div>
-                            <span className="text-gray-500">Children:</span>{" "}
+                            <span className="text-gray-600 font-semibold">
+                              Children:
+                            </span>{" "}
                             <span className="text-gray-900 font-medium">
                               {childrenOf[m.id]
-                                .map((id) => byId[id]?.firstName)
+                                .map((id) => byId[id]?.fullName || "Unknown")
                                 .join(", ")}
                             </span>
                           </div>
                         )}
+                        {siblingsOf[m.id]?.length > 0 && (
+                          <div>
+                            <span className="text-gray-600 font-semibold">
+                              Siblings:
+                            </span>{" "}
+                            <span className="text-gray-900 font-medium">
+                              {siblingsOf[m.id]
+                                .map((id) => byId[id]?.fullName || "Unknown")
+                                .join(", ")}
+                            </span>
+                          </div>
+                        )}
+                        {otherRelativesOf[m.id]?.length > 0 && (
+                          <div>
+                            <span className="text-gray-600 font-semibold">
+                              Other:
+                            </span>{" "}
+                            <span className="text-gray-900 font-medium">
+                              {otherRelativesOf[m.id]
+                                .map(
+                                  (rel) => byId[rel.id]?.fullName || "Unknown"
+                                )
+                                .join(", ")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 rounded-lg p-3 mb-3 text-xs">
+                        <span className="text-gray-400 italic">
+                          No relations
+                        </span>
                       </div>
                     )}
 

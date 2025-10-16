@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, adminStorage } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,11 +27,11 @@ export async function POST(request: Request) {
     // Read file buffer
     console.log('💾 Reading file buffer...');
     const arrayBuffer = await file.arrayBuffer();
-    const MAX_BYTES = 10 * 1024 * 1024; // 10 MB limit for Firestore
+    const MAX_BYTES = 50 * 1024 * 1024; // 50 MB limit
     console.log(`📊 File size: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
     if (arrayBuffer.byteLength > MAX_BYTES) {
       return NextResponse.json(
-        { error: "File too large. Max 10 MB." },
+        { error: "File too large. Max 50 MB." },
         { status: 413 }
       );
     }
@@ -49,15 +49,37 @@ export async function POST(request: Request) {
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 8);
     const extension = file.name.split('.').pop() || 'bin';
-    const filename = `${folder}_${userId}_${memberId}_${timestamp}_${randomStr}.${extension}`;
+    const filename = `${folder}/${userId}/${memberId}/${timestamp}_${randomStr}.${extension}`;
     
-    // Convert to base64 and store in Firestore
-    console.log('🔄 Converting to base64...');
+    // Upload to Firebase Storage
+    console.log('📤 Uploading to Firebase Storage...');
     const buffer = Buffer.from(arrayBuffer);
-    const base64Content = buffer.toString('base64');
+    const bucket = adminStorage.bucket();
+    const fileRef = bucket.file(filename);
     
-    console.log('💾 Saving to Firestore uploadedDocuments collection...');
-    const fileDoc = await adminDb.collection("uploadedDocuments").add({
+    await fileRef.save(buffer, {
+      metadata: {
+        contentType: file.type,
+        metadata: {
+          userId,
+          memberId,
+          kind,
+          originalName: file.name,
+          uploadedAt: new Date().toISOString(),
+        },
+      },
+    });
+    
+    // Make file publicly accessible
+    await fileRef.makePublic();
+    
+    // Get public URL
+    const fileUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+    console.log('✅ File uploaded to Storage:', fileUrl);
+    
+    // Store metadata in Firestore (without the large file content)
+    console.log('💾 Saving metadata to Firestore...');
+    await adminDb.collection("uploadedDocuments").add({
       userId,
       memberId,
       fileName: file.name,
@@ -65,15 +87,9 @@ export async function POST(request: Request) {
       fileType: file.type,
       fileSize: file.size,
       kind,
-      content: base64Content,
+      url: fileUrl,
       uploadedAt: new Date().toISOString(),
     });
-    
-    console.log('✅ File stored in Firestore with ID:', fileDoc.id);
-    
-    // Create a data URL for immediate use
-    const fileUrl = `data:${file.type};base64,${base64Content}`;
-    console.log('🔗 Data URL created');
 
     const ref = adminDb.collection("familyTrees").doc(userId);
     const snap = await ref.get();

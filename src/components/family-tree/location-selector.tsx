@@ -120,12 +120,17 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
     setManualChange(false);
   }, [cell]);
 
-  // Notify parent of complete selection
+  // Notify parent of selection (complete or partial)
   useEffect(() => {
     if (province && district && sector && cell && village) {
+      console.log('✅ Complete location selected:', { province, district, sector, cell, village });
+      onChange({ province, district, sector, cell, village });
+    } else if (province || district || sector || cell || village) {
+      // Partial selection - still notify parent
+      console.log('⚠️ Partial location selected:', { province, district, sector, cell, village });
       onChange({ province, district, sector, cell, village });
     }
-  }, [province, district, sector, cell, village, onChange]);
+  }, [province, district, sector, cell, village]);
 
   return (
     <div className="space-y-3">

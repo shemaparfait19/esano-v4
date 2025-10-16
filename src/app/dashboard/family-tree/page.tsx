@@ -546,6 +546,9 @@ export default function FamilyTreePage() {
     try {
       setSaving(true);
       const targetOwner = ownerIdParam || user.uid;
+      console.log('💾 saveFamilyTree called');
+      console.log('📊 Tree members count:', tree.members.length);
+      console.log('📦 Tree object being saved:', JSON.stringify(tree, null, 2));
       const response = await fetch("/api/family-tree", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

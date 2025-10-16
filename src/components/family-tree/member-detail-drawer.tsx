@@ -170,6 +170,9 @@ export function MemberDetailDrawer({
     key: K,
     value: FamilyMember[K]
   ) {
+    if (key === 'location') {
+      console.log('📍 Location field updated:', value);
+    }
     setDraft((prev) =>
       prev
         ? { ...prev, [key]: value, updatedAt: new Date().toISOString() }
@@ -179,6 +182,9 @@ export function MemberDetailDrawer({
 
   function save() {
     if (!draft || !onSave) return;
+    console.log('💾 Saving member:', draft.id, draft.fullName);
+    console.log('📍 Location in draft:', draft.location);
+    console.log('📦 Full draft object:', JSON.stringify(draft, null, 2));
     onSave(draft);
     toast({ title: "Saved" });
   }

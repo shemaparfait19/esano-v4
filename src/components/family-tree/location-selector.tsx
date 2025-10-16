@@ -60,7 +60,9 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
   // Get villages based on selected cell
   const villages = useMemo(() => {
     if (!province || !district || !sector || !cell) return [];
-    return (rwandaLocations as any)[province]?.[district]?.[sector]?.[cell] || [];
+    const data = (rwandaLocations as any)[province]?.[district]?.[sector]?.[cell] || [];
+    // Ensure all values are strings
+    return Array.isArray(data) ? data.filter(v => typeof v === 'string') : [];
   }, [province, district, sector, cell]);
 
   // Reset dependent selections when parent changes
@@ -122,9 +124,9 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
               <SelectValue placeholder="Select province" />
             </SelectTrigger>
             <SelectContent>
-              {provinces.map((p) => (
+              {provinces.filter(p => typeof p === 'string').map((p) => (
                 <SelectItem key={p} value={p}>
-                  {p}
+                  {String(p)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -148,9 +150,9 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
               <SelectValue placeholder="Select district" />
             </SelectTrigger>
             <SelectContent>
-              {districts.map((d) => (
+              {districts.filter(d => typeof d === 'string').map((d) => (
                 <SelectItem key={d} value={d}>
-                  {d}
+                  {String(d)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -173,9 +175,9 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
               <SelectValue placeholder="Select sector" />
             </SelectTrigger>
             <SelectContent>
-              {sectors.map((s) => (
+              {sectors.filter(s => typeof s === 'string').map((s) => (
                 <SelectItem key={s} value={s}>
-                  {s}
+                  {String(s)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -197,9 +199,9 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
               <SelectValue placeholder="Select cell" />
             </SelectTrigger>
             <SelectContent>
-              {cells.map((c) => (
+              {cells.filter(c => typeof c === 'string').map((c) => (
                 <SelectItem key={c} value={c}>
-                  {c}
+                  {String(c)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -218,9 +220,9 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
               <SelectValue placeholder="Select village" />
             </SelectTrigger>
             <SelectContent>
-              {villages.map((v: string) => (
+              {villages.filter(v => typeof v === 'string').map((v: string) => (
                 <SelectItem key={v} value={v}>
-                  {v}
+                  {String(v)}
                 </SelectItem>
               ))}
             </SelectContent>

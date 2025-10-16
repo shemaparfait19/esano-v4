@@ -37,6 +37,7 @@ const navItems = [
   { href: "/dashboard", icon: LayoutGrid, label: "Dashboard" },
   { href: "/dashboard/dna-analysis", icon: Dna, label: "DNA Analysis" },
   { href: "/dashboard/relatives", icon: Users, label: "Relatives" },
+  { href: "/dashboard/connections", icon: Users, label: "Connections" },
   { href: "/dashboard/profile", icon: Users, label: "Profile" },
   { href: "/dashboard/family-tree", icon: Globe, label: "Family Tree" },
   { href: "/dashboard/shared-trees", icon: Users, label: "Shared Trees" },

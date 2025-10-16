@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,36 +35,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // Save to local file system
+    // Store DNA data directly in Firestore (no file system needed)
     const fileName = file.name || `dna_${Date.now()}.txt`;
-    const uploadDir = join(process.cwd(), "uploads", "dna", userId);
-    
-    // Create directory if it doesn't exist
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-    
-    const filePath = join(uploadDir, fileName);
-    await writeFile(filePath, buf);
-    
-    // Create accessible URL path
-    const fileUrl = `/uploads/dna/${userId}/${fileName}`;
-    const storagePath = `uploads/dna/${userId}/${fileName}`;
 
     // Extract text sample for matching
     const textSample = buf.toString("utf8").slice(0, 1_000_000);
     
-    // Save metadata to Firestore
+    // Save to Firestore (database storage only)
     const doc = {
       userId,
       fileName,
-      fileUrl,
-      storagePath,
       uploadDate: new Date().toISOString(),
       fileSize: buf.byteLength,
       status: "active" as const,
-      backend: "local_storage" as const,
+      backend: "firestore" as const,
       textSample,
+      fullData: textSample, // Store full sample for analysis
     };
     
     const savedRef = await adminDb.collection("dna_data").add(doc);
@@ -79,7 +62,6 @@ export async function POST(req: Request) {
           userId,
           dnaData: textSample,
           dnaFileName: fileName,
-          dnaFileUrl: fileUrl,
           updatedAt: new Date().toISOString(),
         },
         { merge: true }

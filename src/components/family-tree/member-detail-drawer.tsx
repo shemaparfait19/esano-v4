@@ -66,7 +66,10 @@ export function MemberDetailDrawer({
   // Initialize relationship inference engine
   const relationshipEngine = useMemo(() => {
     if (members.length === 0 || !member) return null;
-    return new RelationshipInferenceEngine(members, edges);
+    // Filter out invalid members
+    const validMembers = members.filter(m => m && typeof m === 'object' && m.id);
+    if (validMembers.length === 0) return null;
+    return new RelationshipInferenceEngine(validMembers, edges);
   }, [members, edges, member]);
 
   // Get all inferred relationships for this member
@@ -380,7 +383,7 @@ export function MemberDetailDrawer({
                 <div>
                   <Label>Parent 1</Label>
                   <Select
-                    value={relParent1}
+                    value={relParent1 || "none"}
                     onValueChange={(v) => setRelParent1(v === "none" ? "" : v)}
                   >
                     <SelectTrigger>
@@ -388,7 +391,7 @@ export function MemberDetailDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members.filter(m => m?.id && m.id !== draft?.id).map((m) => (
+                      {members.filter(m => m?.id && typeof m.fullName === 'string' && m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.fullName || m.firstName || "Unknown"}
                         </SelectItem>
@@ -399,7 +402,7 @@ export function MemberDetailDrawer({
                 <div>
                   <Label>Parent 2</Label>
                   <Select
-                    value={relParent2}
+                    value={relParent2 || "none"}
                     onValueChange={(v) => setRelParent2(v === "none" ? "" : v)}
                   >
                     <SelectTrigger>
@@ -407,7 +410,7 @@ export function MemberDetailDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members.filter(m => m?.id && m.id !== draft?.id).map((m) => (
+                      {members.filter(m => m?.id && typeof m.fullName === 'string' && m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.fullName || m.firstName || "Unknown"}
                         </SelectItem>
@@ -418,7 +421,7 @@ export function MemberDetailDrawer({
                 <div className="md:col-span-2">
                   <Label>Spouse</Label>
                   <Select
-                    value={relSpouse}
+                    value={relSpouse || "none"}
                     onValueChange={(v) => setRelSpouse(v === "none" ? "" : v)}
                   >
                     <SelectTrigger>
@@ -426,7 +429,7 @@ export function MemberDetailDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members.filter(m => m?.id && m.id !== draft?.id).map((m) => (
+                      {members.filter(m => m?.id && typeof m.fullName === 'string' && m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.fullName || m.firstName || "Unknown"}
                         </SelectItem>
@@ -479,7 +482,7 @@ export function MemberDetailDrawer({
                 <div>
                   <Label>Target member</Label>
                   <Select
-                    value={relExtraTarget}
+                    value={relExtraTarget || "none"}
                     onValueChange={(v) => setRelExtraTarget(v === "none" ? "" : v)}
                   >
                     <SelectTrigger>
@@ -487,7 +490,7 @@ export function MemberDetailDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members.filter(m => m?.id && m.id !== draft?.id).map((m) => (
+                      {members.filter(m => m?.id && typeof m.fullName === 'string' && m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.fullName || m.firstName || "Unknown"}
                         </SelectItem>

@@ -208,7 +208,10 @@ export class RelationshipInferenceEngine {
     let type: RelationshipType;
     let description: string;
 
-    if (absDistance === 1) {
+    if (absDistance === 0) {
+      // Skip self-relationship in ancestor inference
+      return;
+    } else if (absDistance === 1) {
       type = "parent";
       description = "Parent";
     } else if (absDistance === 2) {
@@ -217,10 +220,13 @@ export class RelationshipInferenceEngine {
     } else if (absDistance === 3) {
       type = "great-grandparent";
       description = "Great-Grandparent";
-    } else {
+    } else if (absDistance > 3) {
       type = "great-grandparent";
       const greats = "Great-".repeat(absDistance - 2);
       description = `${greats}Grandparent`;
+    } else {
+      // Invalid distance, skip
+      return;
     }
 
     this.addRelationship(memberId, ancestorId, {
@@ -244,7 +250,10 @@ export class RelationshipInferenceEngine {
     let type: RelationshipType;
     let description: string;
 
-    if (absDistance === 1) {
+    if (absDistance === 0) {
+      // Skip self-relationship in descendant inference
+      return;
+    } else if (absDistance === 1) {
       type = "child";
       description = "Child";
     } else if (absDistance === 2) {
@@ -253,10 +262,13 @@ export class RelationshipInferenceEngine {
     } else if (absDistance === 3) {
       type = "great-grandchild";
       description = "Great-Grandchild";
-    } else {
+    } else if (absDistance > 3) {
       type = "great-grandchild";
       const greats = "Great-".repeat(absDistance - 2);
       description = `${greats}Grandchild`;
+    } else {
+      // Invalid distance, skip
+      return;
     }
 
     this.addRelationship(memberId, descendantId, {

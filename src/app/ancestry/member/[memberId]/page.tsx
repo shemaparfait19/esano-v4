@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { FamilyMember, FamilyEdge } from "@/types/family-tree";
+import { RelationshipInferenceEngine } from "@/lib/relationship-inference-engine";
 
 type TreeResponse = {
   tree: {
@@ -86,17 +87,11 @@ export default function MemberProfilePage({
     return Array.from(new Set(ids));
   }, [edges, member]);
 
-  // Create a map of member IDs to names
-  const memberNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    allMembers.forEach((m) => {
-      map.set(m.id, m.fullName || m.firstName || m.id);
-    });
-    return map;
-  }, [allMembers]);
-
-  // helper to map id to display name
-  const toName = (id: string) => memberNameMap.get(id) || id;
+  // Initialize relationship inference engine
+  const relationshipEngine = useMemo(() => {
+    if (allMembers.length === 0 || !member) return null;
+    return new RelationshipInferenceEngine(allMembers, edges);
+  }, [allMembers, edges, member]);
 
   if (loading) {
     return (
@@ -173,18 +168,52 @@ export default function MemberProfilePage({
         {/* Relationships */}
         <Card className="p-4">
           <div className="text-sm font-medium mb-2">Relationships</div>
-          <div className="text-sm text-muted-foreground">
-            <div>
-              Spouse: {spouses.length ? spouses.map(toName).join(", ") : "—"}
+          {relationshipEngine ? (
+            <div className="text-sm text-muted-foreground space-y-2">
+              {(() => {
+                const allRels = relationshipEngine.getAllRelationshipsFor(member.id);
+                
+                if (allRels.length === 0) {
+                  return <div className="text-gray-400 italic">No relationships found</div>;
+                }
+
+                // Group by relationship type
+                const grouped = allRels.reduce((acc, rel) => {
+                  if (!acc[rel.type]) acc[rel.type] = [];
+                  acc[rel.type].push(rel);
+                  return acc;
+                }, {} as Record<string, typeof allRels>);
+
+                const displayOrder = [
+                  'spouse', 'parent', 'child', 'sibling', 'half-sibling',
+                  'grandparent', 'grandchild', 'great-grandparent', 'great-grandchild',
+                  'aunt', 'uncle', 'niece', 'nephew', 'cousin', 'second-cousin'
+                ];
+
+                return displayOrder.map(type => {
+                  const rels = grouped[type];
+                  if (!rels || rels.length === 0) return null;
+
+                  const label = type.split('-').map(w => 
+                    w.charAt(0).toUpperCase() + w.slice(1)
+                  ).join(' ') + (rels.length > 1 ? 's' : '');
+
+                  const names = rels.map(rel => {
+                    const relMember = allMembers.find(m => m.id === rel.toId);
+                    return relMember?.fullName || relMember?.firstName || 'Unknown';
+                  }).join(", ");
+
+                  return (
+                    <div key={type}>
+                      <span className="font-semibold">{label}:</span> {names}
+                    </div>
+                  );
+                }).filter(Boolean);
+              })()}
             </div>
-            <div>
-              Parents: {parents.length ? parents.map(toName).join(", ") : "—"}
-            </div>
-            <div>
-              Children:{" "}
-              {children.length ? children.map(toName).join(", ") : "—"}
-            </div>
-          </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">Loading relationships...</div>
+          )}
         </Card>
 
         {/* Biography */}

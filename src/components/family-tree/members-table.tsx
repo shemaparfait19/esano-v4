@@ -1,36 +1,20 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import type { FamilyMember, FamilyEdge } from "@/types/family-tree";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
-  Users,
-  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Plus,
   Eye,
   Edit,
-  ChevronDown,
-  ChevronRight,
-  UserPlus,
+  Sparkles,
 } from "lucide-react";
-
-interface FamilyMember {
-  id: string;
-  fullName: string;
-  firstName?: string;
-  gender?: string;
-  birthDate?: string;
-  deathDate?: string;
-  isDeceased?: boolean;
-  location?: string;
-  tags?: string[];
-  notes?: string;
-  generation?: number;
-  isHeadOfFamily?: boolean;
-}
-
-interface FamilyEdge {
-  fromId: string;
-  toId: string;
-  type: string;
-}
+import { useRouter } from "next/navigation";
+import { RelationshipInferenceEngine } from "@/lib/relationship-inference-engine";
 
 interface MembersTableProps {
   members: FamilyMember[];
@@ -94,11 +78,17 @@ export function MembersTable({
 
   const byId = useMemo(() => {
     const map = Object.fromEntries(members.map((m) => [m.id, m]));
-    // Debug: Log member IDs
-    console.log('Available member IDs:', Object.keys(map));
-    console.log('Total members:', members.length);
     return map;
   }, [members]);
+
+  // Initialize the relationship inference engine
+  const relationshipEngine = useMemo(() => {
+    if (members.length === 0) return null;
+    console.log('🔄 Initializing Relationship Inference Engine...');
+    const engine = new RelationshipInferenceEngine(members, edges);
+    console.log('✅ Relationship Engine Ready');
+    return engine;
+  }, [members, edges]);
 
   const parentsOf = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -355,67 +345,51 @@ export function MembersTable({
                     </td>
                     <td className="py-4 px-4">
                       <div className="text-xs text-gray-700 space-y-1">
-                        {spouseOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="font-semibold text-gray-600">
-                              Spouse:
-                            </span>{" "}
-                            {spouseOf[m.id]
-                              .map((id) => byId[id]?.fullName || "Unknown")
-                              .join(", ")}
-                          </div>
-                        )}
-                        {parentsOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="font-semibold text-gray-600">
-                              Parents:
-                            </span>{" "}
-                            {parentsOf[m.id]
-                              .map((id) => byId[id]?.fullName || "Unknown")
-                              .join(", ")}
-                          </div>
-                        )}
-                        {childrenOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="font-semibold text-gray-600">
-                              Children:
-                            </span>{" "}
-                            {childrenOf[m.id]
-                              .map((id) => {
-                                const child = byId[id];
-                                if (!child) {
-                                  console.warn(`Child not found: ${id}`);
-                                  return `Unknown (${id.slice(0, 8)}...)`;
-                                }
-                                return child.fullName || child.firstName || id;
-                              })
-                              .join(", ")}
-                          </div>
-                        )}
-                        {siblingsOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="font-semibold text-gray-600">
-                              Siblings:
-                            </span>{" "}
-                            {siblingsOf[m.id]
-                              .map((id) => byId[id]?.fullName || "Unknown")
-                              .join(", ")}
-                          </div>
-                        )}
-                        {otherRelativesOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="font-semibold text-gray-600">
-                              Other:
-                            </span>{" "}
-                            {otherRelativesOf[m.id]
-                              .map((rel) => byId[rel.id]?.fullName || "Unknown")
-                              .join(", ")}
-                          </div>
-                        )}
-                        {!hasRelationships(m.id) && (
-                          <div className="text-gray-400 italic">
-                            No relations
-                          </div>
+                        {relationshipEngine ? (
+                          <>
+                            {(() => {
+                              const allRels = relationshipEngine.getAllRelationshipsFor(m.id);
+                              
+                              // Group by relationship type
+                              const grouped = allRels.reduce((acc, rel) => {
+                                if (!acc[rel.type]) acc[rel.type] = [];
+                                acc[rel.type].push(rel);
+                                return acc;
+                              }, {} as Record<string, typeof allRels>);
+
+                              const displayOrder = [
+                                'spouse', 'parent', 'child', 'sibling', 'half-sibling',
+                                'grandparent', 'grandchild', 'great-grandparent', 'great-grandchild',
+                                'aunt', 'uncle', 'niece', 'nephew', 'cousin'
+                              ];
+
+                              return displayOrder.map(type => {
+                                const rels = grouped[type];
+                                if (!rels || rels.length === 0) return null;
+
+                                const label = type.split('-').map(w => 
+                                  w.charAt(0).toUpperCase() + w.slice(1)
+                                ).join(' ') + (rels.length > 1 ? 's' : '');
+
+                                return (
+                                  <div key={type}>
+                                    <span className="font-semibold text-gray-600">
+                                      {label}:
+                                    </span>{" "}
+                                    {rels.map(rel => {
+                                      const member = byId[rel.toId];
+                                      return member?.fullName || member?.firstName || 'Unknown';
+                                    }).join(", ")}
+                                  </div>
+                                );
+                              }).filter(Boolean);
+                            })()}
+                            {relationshipEngine.getAllRelationshipsFor(m.id).length === 0 && (
+                              <div className="text-gray-400 italic">No relations</div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-gray-400 italic">Loading relationships...</div>
                         )}
                       </div>
                     </td>
@@ -601,82 +575,58 @@ export function MembersTable({
                     </div>
 
                     {/* Relations */}
-                    {hasRelationships(m.id) ? (
-                      <div className="bg-gray-50 rounded-lg p-3 mb-3 text-xs space-y-1.5">
-                        {spouseOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="text-gray-600 font-semibold">
-                              Spouse:
-                            </span>{" "}
-                            <span className="text-gray-900 font-medium">
-                              {spouseOf[m.id]
-                                .map((id) => byId[id]?.fullName || "Unknown")
-                                .join(", ")}
-                            </span>
-                          </div>
-                        )}
-                        {parentsOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="text-gray-600 font-semibold">
-                              Parents:
-                            </span>{" "}
-                            <span className="text-gray-900 font-medium">
-                              {parentsOf[m.id]
-                                .map((id) => byId[id]?.fullName || "Unknown")
-                                .join(", ")}
-                            </span>
-                          </div>
-                        )}
-                        {childrenOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="text-gray-600 font-semibold">
-                              Children:
-                            </span>{" "}
-                            <span className="text-gray-900 font-medium">
-                              {childrenOf[m.id]
-                                .map((id) => {
-                                  const child = byId[id];
-                                  if (!child) {
-                                    console.warn(`Child not found in mobile view: ${id}`);
-                                    return `Unknown (${id.slice(0, 8)}...)`;
-                                  }
-                                  return child.fullName || child.firstName || id;
-                                })
-                                .join(", ")}
-                            </span>
-                          </div>
-                        )}
-                        {siblingsOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="text-gray-600 font-semibold">
-                              Siblings:
-                            </span>{" "}
-                            <span className="text-gray-900 font-medium">
-                              {siblingsOf[m.id]
-                                .map((id) => byId[id]?.fullName || "Unknown")
-                                .join(", ")}
-                            </span>
-                          </div>
-                        )}
-                        {otherRelativesOf[m.id]?.length > 0 && (
-                          <div>
-                            <span className="text-gray-600 font-semibold">
-                              Other:
-                            </span>{" "}
-                            <span className="text-gray-900 font-medium">
-                              {otherRelativesOf[m.id]
-                                .map(
-                                  (rel) => byId[rel.id]?.fullName || "Unknown"
-                                )
-                                .join(", ")}
-                            </span>
-                          </div>
-                        )}
+                    {relationshipEngine ? (
+                      <div className="bg-gray-50 rounded-lg p-3 mb-3 text-xs space-y-2">
+                        {(() => {
+                          const allRels = relationshipEngine.getAllRelationshipsFor(m.id);
+                          
+                          if (allRels.length === 0) {
+                            return (
+                              <span className="text-gray-400 italic">No relations</span>
+                            );
+                          }
+
+                          // Group by relationship type
+                          const grouped = allRels.reduce((acc, rel) => {
+                            if (!acc[rel.type]) acc[rel.type] = [];
+                            acc[rel.type].push(rel);
+                            return acc;
+                          }, {} as Record<string, typeof allRels>);
+
+                          const displayOrder = [
+                            'spouse', 'parent', 'child', 'sibling', 'half-sibling',
+                            'grandparent', 'grandchild', 'great-grandparent', 'great-grandchild',
+                            'aunt', 'uncle', 'niece', 'nephew', 'cousin'
+                          ];
+
+                          return displayOrder.map(type => {
+                            const rels = grouped[type];
+                            if (!rels || rels.length === 0) return null;
+
+                            const label = type.split('-').map(w => 
+                              w.charAt(0).toUpperCase() + w.slice(1)
+                            ).join(' ') + (rels.length > 1 ? 's' : '');
+
+                            return (
+                              <div key={type}>
+                                <span className="text-gray-600 font-semibold">
+                                  {label}:
+                                </span>{" "}
+                                <span className="text-gray-900 font-medium">
+                                  {rels.map(rel => {
+                                    const member = byId[rel.toId];
+                                    return member?.fullName || member?.firstName || 'Unknown';
+                                  }).join(", ")}
+                                </span>
+                              </div>
+                            );
+                          }).filter(Boolean);
+                        })()}
                       </div>
                     ) : (
                       <div className="bg-gray-50 rounded-lg p-3 mb-3 text-xs">
                         <span className="text-gray-400 italic">
-                          No relations
+                          Loading relationships...
                         </span>
                       </div>
                     )}

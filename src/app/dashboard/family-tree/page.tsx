@@ -69,6 +69,10 @@ import { FamilyCodeGenerator } from "@/components/family-tree/family-code-genera
 import { GenerationManager } from "@/components/family-tree/generation-manager";
 import { MemberView } from "@/components/family-tree/member-view";
 import { cleanupOrphanedEdges } from "@/lib/cleanup-orphaned-edges";
+import { FamilyTreeToolbar } from "@/components/family-tree/family-tree-toolbar";
+import { AddMemberDialog } from "@/components/family-tree/add-member-dialog";
+import { AddRelationshipDialog } from "@/components/family-tree/add-relationship-dialog";
+import { ShareDialog } from "@/components/family-tree/share-dialog";
 
 export default function FamilyTreePage() {
   const { user, userProfile } = useAuth();
@@ -892,98 +896,21 @@ export default function FamilyTreePage() {
         <>
           {/* Toolbar - only for approved users */}
           {userProfile?.familyTreeApproved && (
-          <div className="flex-none border-b bg-white sticky top-0 z-20">
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                {ownerIdParam && ownerIdParam !== user?.uid && (
-                  <div className="mr-2 flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-muted">
-                      Shared from {ownerName || "Owner"}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex-1" />
-
-                <div className="flex items-center gap-2">
-                  <div className="hidden sm:flex items-center text-xs text-muted-foreground mr-2 min-w-[90px] justify-end">
-                    {dirty ? (
-                      isSaving ? (
-                        <span>Saving…</span>
-                      ) : (
-                        <span>Unsaved changes</span>
-                      )
-                    ) : (
-                      <span>Saved</span>
-                    )}
-                  </div>
-                  <div className="hidden sm:flex items-center gap-1.5">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={undo}
-                      disabled={readonly}
-                      className="h-8 px-2"
-                      title="Undo"
-                    >
-                      <Undo2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={redo}
-                      disabled={readonly}
-                      className="h-8 px-2"
-                      title="Redo"
-                    >
-                      <Redo2 className="h-4 w-4" />
-                    </Button>
-                    <div className="w-px h-6 bg-border mx-1" />
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleExport}
-                    className="h-8 px-2 hidden sm:flex"
-                    title="Export"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleToggleFullscreen}
-                    className="h-8 px-2 hidden sm:flex"
-                    title="Fullscreen"
-                  >
-                    <Maximize2 className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleAISuggestions}
-                    className="h-8 px-2 hidden md:flex"
-                    title="AI Suggestions"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                  </Button>
-
-                  {!ownerIdParam && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShareDialogOpen(true)}
-                      className="whitespace-nowrap h-8"
-                    >
-                      Share {shares.length > 0 && `(${shares.length})`}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <FamilyTreeToolbar
+              ownerIdParam={ownerIdParam}
+              ownerName={ownerName}
+              userId={user?.uid}
+              dirty={dirty}
+              isSaving={isSaving}
+              readonly={readonly}
+              shares={shares}
+              onUndo={undo}
+              onRedo={redo}
+              onExport={handleExport}
+              onToggleFullscreen={handleToggleFullscreen}
+              onAISuggestions={handleAISuggestions}
+              onShare={() => setShareDialogOpen(true)}
+            />
           )}
 
           {(!tree || (tree?.members?.length || 0) === 0) && !ownerIdParam && (
@@ -1159,369 +1086,54 @@ export default function FamilyTreePage() {
           </div>
           
           {/* Dialogs */}
-          <Dialog
+          <AddMemberDialog
             open={showAddMemberDialog}
             onOpenChange={setShowAddMemberDialog}
-          >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add Family Member</DialogTitle>
-              </DialogHeader>
+            member={newMember}
+            onMemberChange={setNewMember}
+            onSave={handleSaveMember}
+          />
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="firstName">First Name *</Label>
-                    <Input
-                      id="firstName"
-                      value={newMember.firstName || ""}
-                      onChange={(e) =>
-                        setNewMember((prev) => ({
-                          ...prev,
-                          firstName: e.target.value,
-                        }))
-                      }
-                      placeholder="First name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Last Name *</Label>
-                    <Input
-                      id="lastName"
-                      value={newMember.lastName || ""}
-                      onChange={(e) =>
-                        setNewMember((prev) => ({
-                          ...prev,
-                          lastName: e.target.value,
-                        }))
-                      }
-                      placeholder="Last name"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="birthDate">Birth Date</Label>
-                    <Input
-                      id="birthDate"
-                      type="date"
-                      value={newMember.birthDate || ""}
-                      onChange={(e) =>
-                        setNewMember((prev) => ({
-                          ...prev,
-                          birthDate: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="gender">Gender</Label>
-                    <Select
-                      value={newMember.gender || ""}
-                      onValueChange={(value) =>
-                        setNewMember((prev) => ({
-                          ...prev,
-                          gender: value as any,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={newMember.location || ""}
-                    onChange={(e) =>
-                      setNewMember((prev) => ({
-                        ...prev,
-                        location: e.target.value,
-                      }))
-                    }
-                    placeholder="Birth place, residence, etc."
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <Button onClick={handleSaveMember} className="flex-1">
-                    Add Member
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddMemberDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog
+          <AddRelationshipDialog
             open={showAddRelationshipDialog}
             onOpenChange={setShowAddRelationshipDialog}
-          >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add Relationship</DialogTitle>
-              </DialogHeader>
+            relationship={newRelationship}
+            onRelationshipChange={setNewRelationship}
+            members={members}
+            onSave={handleSaveRelationship}
+            suggestion={suggestion}
+          />
 
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="fromMember">From Member</Label>
-                  <Select
-                    value={newRelationship.fromId || ""}
-                    onValueChange={(value) =>
-                      setNewRelationship((prev) => ({ ...prev, fromId: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select first member" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {members.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.fullName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="relationshipType">Relationship Type</Label>
-                  <Select
-                    value={newRelationship.type || ""}
-                    onValueChange={(value) =>
-                      setNewRelationship((prev) => ({
-                        ...prev,
-                        type: value as any,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select relationship" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="parent">Parent</SelectItem>
-                      <SelectItem value="spouse">Spouse</SelectItem>
-                      <SelectItem value="adoptive">Adoptive</SelectItem>
-                      <SelectItem value="step">Step</SelectItem>
-                      <SelectItem value="big_sister">Big Sister</SelectItem>
-                      <SelectItem value="little_sister">
-                        Little Sister
-                      </SelectItem>
-                      <SelectItem value="big_brother">Big Brother</SelectItem>
-                      <SelectItem value="little_brother">
-                        Little Brother
-                      </SelectItem>
-                      <SelectItem value="aunt">Aunt</SelectItem>
-                      <SelectItem value="uncle">Uncle</SelectItem>
-                      <SelectItem value="cousin_big">Cousin (Older)</SelectItem>
-                      <SelectItem value="cousin_little">
-                        Cousin (Younger)
-                      </SelectItem>
-                      <SelectItem value="guardian">Guardian</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="toMember">To Member</Label>
-                  <Select
-                    value={newRelationship.toId || ""}
-                    onValueChange={(value) =>
-                      setNewRelationship((prev) => ({ ...prev, toId: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select second member" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {members.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.fullName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {suggestion && (
-                  <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded">
-                    {suggestion}
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <Button onClick={handleSaveRelationship} className="flex-1">
-                    Add Relationship
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddRelationshipDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Share Family Tree</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                {shares.length > 0 && (
-                  <div>
-                    <Label className="text-sm font-medium">
-                      Currently shared with
-                    </Label>
-                    <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                      {shares.map((s) => (
-                        <div
-                          key={s.id}
-                          className="flex items-center justify-between gap-2 p-2 border rounded-lg bg-gray-50"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              {shareNames[s.targetUserId] ||
-                                s.targetEmail ||
-                                s.targetUserId}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {s.role}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <Select
-                              value={s.role}
-                              onValueChange={async (v) => {
-                                try {
-                                  await fetch("/api/family-tree/share", {
-                                    method: "PATCH",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      ownerId: user?.uid,
-                                      targetUserId: s.targetUserId,
-                                      role: v,
-                                    }),
-                                  });
-                                  setShares((prev) =>
-                                    prev.map((p) =>
-                                      p.id === s.id ? { ...p, role: v } : p
-                                    )
-                                  );
-                                } catch {}
-                              }}
-                            >
-                              <SelectTrigger className="h-7 w-24 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="viewer">Viewer</SelectItem>
-                                <SelectItem value="editor">Editor</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              onClick={async () => {
-                                try {
-                                  await fetch(
-                                    `/api/family-tree/share?ownerId=${user?.uid}&targetUserId=${s.targetUserId}`,
-                                    {
-                                      method: "DELETE",
-                                    }
-                                  );
-                                  setShares((prev) =>
-                                    prev.filter((p) => p.id !== s.id)
-                                  );
-                                } catch {}
-                              }}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="border-t pt-4">
-                  <Label className="text-sm font-medium">
-                    Share with new person
-                  </Label>
-                  <div className="mt-2 space-y-3">
-                    <div>
-                      <Label htmlFor="shareEmail" className="text-xs">
-                        Email
-                      </Label>
-                      <Input
-                        id="shareEmail"
-                        type="email"
-                        value={shareEmail}
-                        onChange={(e) => setShareEmail(e.target.value)}
-                        placeholder="friend@example.com"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="shareRole" className="text-xs">
-                        Permission
-                      </Label>
-                      <Select
-                        value={shareRole}
-                        onValueChange={(v) => setShareRole(v as any)}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="viewer">
-                            Viewer (read-only)
-                          </SelectItem>
-                          <SelectItem value="editor">
-                            Editor (can edit)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <Button onClick={handleShare} className="flex-1">
-                    Share
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShareDialogOpen(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <ShareDialog
+            open={shareDialogOpen}
+            onOpenChange={setShareDialogOpen}
+            email={shareEmail}
+            role={shareRole}
+            shares={shares}
+            shareNames={shareNames}
+            userId={user?.uid}
+            onEmailChange={setShareEmail}
+            onRoleChange={setShareRole}
+            onShare={handleShare}
+            onUpdateShare={async (targetUserId, newRole) => {
+              try {
+                await fetch("/api/family-tree/share", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ ownerId: user?.uid, targetUserId, role: newRole }),
+                });
+                setShares((prev) => prev.map((p) => p.targetUserId === targetUserId ? { ...p, role: newRole } : p));
+              } catch {}
+            }}
+            onRevoke={async (targetUserId) => {
+              try {
+                await fetch(`/api/family-tree/share?ownerId=${user?.uid}&targetUserId=${targetUserId}`, {
+                  method: "DELETE",
+                });
+                setShares((prev) => prev.filter((p) => p.targetUserId !== targetUserId));
+              } catch {}
+            }}
+          />
           </>
           )}
         </>

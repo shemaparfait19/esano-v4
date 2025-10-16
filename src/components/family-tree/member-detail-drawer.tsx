@@ -108,17 +108,34 @@ export function MemberDetailDrawer({
   if (!draft) return null;
 
   // Helper to handle document viewing/downloading
-  const handleDocumentClick = (doc: any) => {
+  const handleDocumentClick = (e: React.MouseEvent, doc: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const url = typeof doc === 'string' ? doc : doc.url;
-    const name = typeof doc === 'object' && doc.name ? doc.name : 'document';
+    let name = typeof doc === 'object' && doc.name ? doc.name : 'document';
     
     // If it's a data URL, convert to blob and download
-    if (url.startsWith('data:')) {
+    if (url && url.startsWith('data:')) {
       try {
         // Extract base64 content
         const [header, base64] = url.split(',');
         const mimeMatch = header.match(/data:([^;]+)/);
         const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+        
+        // Add proper extension if missing
+        const extensionMap: Record<string, string> = {
+          'application/pdf': '.pdf',
+          'application/msword': '.doc',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+          'application/vnd.ms-excel': '.xls',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+          'text/plain': '.txt',
+        };
+        
+        if (!name.includes('.') && extensionMap[mimeType]) {
+          name += extensionMap[mimeType];
+        }
         
         // Convert base64 to blob
         const byteString = atob(base64);
@@ -134,18 +151,26 @@ export function MemberDetailDrawer({
         const a = document.createElement('a');
         a.href = blobUrl;
         a.download = name;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(blobUrl);
-      } catch (e) {
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+        
+        toast({
+          title: "Download started",
+          description: name,
+        });
+      } catch (err) {
+        console.error('Document download error:', err);
         toast({
           title: "Error",
-          description: "Failed to open document",
+          description: "Failed to download document",
           variant: "destructive",
         });
       }
     } else {
       // Regular URL - open in new tab
-      window.open(url, '_blank');
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -830,8 +855,9 @@ export function MemberDetailDrawer({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <button
-                        onClick={() => handleDocumentClick(doc)}
-                        className="text-blue-600 hover:underline text-left"
+                        onClick={(e) => handleDocumentClick(e, doc)}
+                        className="text-blue-600 hover:underline text-left cursor-pointer"
+                        type="button"
                       >
                         {typeof doc === 'object' && doc.name ? doc.name : `Document ${i + 1}`}
                       </button>

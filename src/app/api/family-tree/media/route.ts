@@ -54,21 +54,29 @@ export async function POST(request: Request) {
     const extension = file.name.split('.').pop() || 'bin';
     const filename = `${userId}_${memberId}_${timestamp}_${randomStr}.${extension}`;
     
-    // Create directory if it doesn't exist
-    const uploadDir = join(process.cwd(), 'public', 'uploads', folder);
-    console.log('📁 Creating directory:', uploadDir);
-    await mkdir(uploadDir, { recursive: true });
+    let fileUrl: string;
     
-    // Save file
-    const filePath = join(uploadDir, filename);
-    console.log('💾 Saving file to:', filePath);
-    const buffer = Buffer.from(arrayBuffer);
-    await writeFile(filePath, buffer);
-    console.log('✅ File saved successfully');
-    
-    // Public URL path
-    const fileUrl = `/uploads/${folder}/${filename}`;
-    console.log('🔗 Public URL:', fileUrl);
+    try {
+      // Try to save to local file system (works in development)
+      const uploadDir = join(process.cwd(), 'public', 'uploads', folder);
+      console.log('📁 Creating directory:', uploadDir);
+      await mkdir(uploadDir, { recursive: true });
+      
+      const filePath = join(uploadDir, filename);
+      console.log('💾 Saving file to:', filePath);
+      const buffer = Buffer.from(arrayBuffer);
+      await writeFile(filePath, buffer);
+      console.log('✅ File saved successfully to disk');
+      
+      fileUrl = `/uploads/${folder}/${filename}`;
+      console.log('🔗 Public URL:', fileUrl);
+    } catch (fsError) {
+      // Fallback to base64 data URL (works on Vercel/serverless)
+      console.warn('⚠️ File system not writable, using base64 fallback:', fsError);
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
+      fileUrl = `data:${file.type};base64,${base64}`;
+      console.log('✅ Using base64 data URL');
+    }
 
     const ref = adminDb.collection("familyTrees").doc(userId);
     const snap = await ref.get();

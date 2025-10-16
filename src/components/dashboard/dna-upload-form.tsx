@@ -94,6 +94,18 @@ export function DnaUploadForm() {
           );
         }
 
+        // Validate DNA format - check for SNP markers
+        const fileText = await file.text();
+        const hasSNPMarkers = /rs\d{6,}/i.test(fileText); // Check for rs numbers like rs12345678
+        const hasChromosomes = /chr[0-9XYM]+/i.test(fileText) || /^[0-9XYM]+\s+rs/im.test(fileText);
+        const hasGenotypes = /[ACGT]{2}|[ACGT]\/[ACGT]|--|\?\?/i.test(fileText);
+        
+        if (!hasSNPMarkers && !hasChromosomes && !hasGenotypes) {
+          throw new Error(
+            "Invalid DNA file format. File must contain SNP markers (rs numbers), chromosome data, or genotype information. Please upload a valid DNA test file from 23andMe, AncestryDNA, or MyHeritage."
+          );
+        }
+
         // Step 1: Upload file to storage
         const fd = new FormData();
         fd.set("userId", user.uid);
@@ -113,7 +125,6 @@ export function DnaUploadForm() {
         });
 
         // Step 2: Analyze DNA automatically
-        const fileText = await file.text();
         const analysisResult = await analyzeDna(user.uid, fileText, file.name);
         
         if (analysisResult.error) {

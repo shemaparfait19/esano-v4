@@ -4,6 +4,7 @@ import { analyzeDnaAndPredictRelatives } from "@/ai/flows/ai-dna-prediction";
 import { analyzeAncestry } from "@/ai/flows/ai-ancestry-estimation";
 import { getGenerationalInsights } from "@/ai/flows/ai-generational-insights";
 import { askGenealogyAssistant } from "@/ai/flows/ai-genealogy-assistant";
+import { parseDNAData, compareDNA, validateDNAQuality } from "@/lib/dna-analysis";
 import type { AnalyzeDnaAndPredictRelativesInput } from "@/ai/schemas/ai-dna-prediction";
 import type { AncestryEstimationInput } from "@/ai/schemas/ai-ancestry-estimation";
 import type { GenerationalInsightsInput } from "@/ai/schemas/ai-generational-insights";
@@ -168,59 +169,59 @@ export async function analyzeDna(
       result.error = e?.message || "AI analysis failed";
     }
 
-    // Predict relatives only if we have comparators and AI available
+    // Use deterministic SNP comparison algorithm instead of AI
     try {
-      if ((hasGemini || hasOpenRouter) && otherUsersDnaData.length > 0) {
-        const dnaInput: AnalyzeDnaAndPredictRelativesInput = {
-          dnaData: safeDnaData,
-          otherUsersDnaData: otherUsersDnaData.slice(0, 50),
-          userFamilyTreeData: "None",
-        };
-        let raw: any[] = [];
-        if (hasGemini) {
-          raw = await withRetry(() => analyzeDnaAndPredictRelatives(dnaInput));
-        } else if (hasOpenRouter) {
-          raw = await withRetry(() =>
-            openRouterJson(
-              "openrouter/auto",
-              [
-                {
-                  role: "system",
-                  content:
-                    "You predict genetic relatives from DNA. Output a JSON array only.",
-                },
-                {
-                  role: "user",
-                  content: `Given USER_DNA and OTHER_USERS (array of dna strings with synthetic ids), return JSON array of {userId, relationshipProbability} where userId is one of the provided ids, probability 0..1. USER_DNA: ${safeDnaData.slice(
-                    0,
-                    50000
-                  )} OTHER_USERS: ${otherUsersDnaData
-                    .slice(0, 50)
-                    .map((s, i) => `id_${i}:${s.slice(0, 3000)}`)
-                    .join("\n")}`,
-                },
-              ],
-              []
-            )
-          );
+      if (otherUsersDnaData.length > 0) {
+        // Parse current user's DNA
+        const userSNPs = parseDNAData(safeDnaData);
+        const quality = validateDNAQuality(userSNPs);
+        
+        if (!quality.valid) {
+          result.error = `DNA quality issues: ${quality.errors.join(', ')}`;
+          result.relatives = [];
+        } else {
+          // Compare with other users
+          const matches: any[] = [];
+          const userIdsArray = Array.from(validUserIds);
+          
+          for (let i = 0; i < Math.min(otherUsersDnaData.length, 50); i++) {
+            try {
+              const otherSNPs = parseDNAData(otherUsersDnaData[i]);
+              const comparison = compareDNA(userSNPs, otherSNPs);
+              
+              // Only include matches with meaningful similarity (>0.5% shared DNA)
+              if (comparison.matchPercentage > 0.5 && comparison.totalCompared >= 100) {
+                matches.push({
+                  userId: userIdsArray[i],
+                  relationshipProbability: comparison.matchPercentage / 100,
+                  estimatedRelationship: comparison.estimatedRelationship,
+                  confidence: comparison.confidence,
+                  sharedSNPs: comparison.sharedSNPs,
+                  totalCompared: comparison.totalCompared,
+                  matchPercentage: comparison.matchPercentage,
+                });
+              }
+            } catch (err) {
+              // Skip this comparison if parsing fails
+              console.error('Failed to compare DNA:', err);
+            }
+          }
+          
+          // Sort by match percentage and take top 20
+          result.relatives = matches
+            .sort((a, b) => b.matchPercentage - a.matchPercentage)
+            .slice(0, 20);
+          
+          if (quality.warnings.length > 0) {
+            result.error = `Warnings: ${quality.warnings.join(', ')}`;
+          }
         }
-        result.relatives = (raw || [])
-          .filter(
-            (r) =>
-              !!r && typeof r.userId === "string" && validUserIds.has(r.userId)
-          )
-          .filter(
-            (r) =>
-              r.relationshipProbability === undefined ||
-              r.relationshipProbability >= 0.3
-          )
-          .slice(0, 20);
       } else {
         result.relatives = [];
       }
     } catch (e: any) {
       result.relatives = [];
-      result.error = result.error || e?.message || "Relative prediction failed";
+      result.error = result.error || e?.message || "DNA comparison failed";
     }
 
     // Persist minimal analysis and the uploaded dna text (merge)

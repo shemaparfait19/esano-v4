@@ -82,9 +82,6 @@ export function MemberDetailDrawer({
   }, [relationshipEngine, member]);
 
   React.useEffect(() => {
-    console.log('🔄 Member changed:', member?.id, member?.fullName);
-    console.log('📦 Full member object:', JSON.stringify(member, null, 2));
-    console.log('📍 Member location property:', member?.location);
     setDraft(member);
     if (!member) return;
     
@@ -360,20 +357,11 @@ export function MemberDetailDrawer({
               </div>
             </div>
             <Label>Location in Rwanda</Label>
-            {(() => {
-              console.log('🔍 Draft location:', draft.location, 'Type:', typeof draft.location);
-              const locationValue = (draft.location && typeof draft.location === 'object' && !Array.isArray(draft.location)) 
-                ? draft.location as any 
-                : undefined;
-              console.log('📍 Passing to LocationSelector:', locationValue);
-              return (
-                <LocationSelector
-                  value={locationValue}
-                  onChange={(loc) => handleField("location", loc as any)}
-                  disabled={readonly}
-                />
-              );
-            })()}
+            <LocationSelector
+              value={(draft.location && typeof draft.location === 'object' && !Array.isArray(draft.location)) ? draft.location as any : undefined}
+              onChange={(loc) => handleField("location", loc as any)}
+              disabled={readonly}
+            />
             <Label>Tags (comma separated)</Label>
             <Input
               value={(draft.tags || []).join(", ")}

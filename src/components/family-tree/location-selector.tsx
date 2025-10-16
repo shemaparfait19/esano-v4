@@ -38,7 +38,6 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
 
   // Update state when value prop changes (for editing existing members)
   useEffect(() => {
-    console.log('📍 LocationSelector received value:', value);
     if (value && typeof value === 'object') {
       setProvince(value.province || "");
       setDistrict(value.district || "");

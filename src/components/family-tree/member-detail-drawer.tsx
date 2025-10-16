@@ -388,9 +388,9 @@ export function MemberDetailDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members.filter(m => m.id !== draft?.id).map((m) => (
+                      {members.filter(m => m?.id && m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
-                          {m.fullName}
+                          {m.fullName || m.firstName || "Unknown"}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -407,9 +407,9 @@ export function MemberDetailDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members.filter(m => m.id !== draft?.id).map((m) => (
+                      {members.filter(m => m?.id && m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
-                          {m.fullName}
+                          {m.fullName || m.firstName || "Unknown"}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -426,9 +426,9 @@ export function MemberDetailDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members.filter(m => m.id !== draft?.id).map((m) => (
+                      {members.filter(m => m?.id && m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
-                          {m.fullName}
+                          {m.fullName || m.firstName || "Unknown"}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -487,9 +487,9 @@ export function MemberDetailDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members.filter(m => m.id !== draft?.id).map((m) => (
+                      {members.filter(m => m?.id && m.id !== draft?.id).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
-                          {m.fullName}
+                          {m.fullName || m.firstName || "Unknown"}
                         </SelectItem>
                       ))}
                     </SelectContent>

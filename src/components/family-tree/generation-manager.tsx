@@ -171,17 +171,17 @@ export function GenerationManager() {
             <div className="space-y-2">
               <Label htmlFor="subhead">Sub-Head</Label>
               <Select
-                value={newGeneration.subHeadId || ""}
+                value={newGeneration.subHeadId || "none"}
                 onValueChange={(value) => setNewGeneration({
                   ...newGeneration, 
-                  subHeadId: value
+                  subHeadId: value === "none" ? "" : value
                 })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a family member" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">
+                  <SelectItem value="none">
                     <span className="text-muted-foreground">None selected</span>
                   </SelectItem>
                   {members

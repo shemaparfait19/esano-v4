@@ -439,10 +439,10 @@ export function NodeEditor({
             <Label>Parents</Label>
             <div className="grid grid-cols-2 gap-2 mt-2">
               <Select
-                value={selectedParents[0] || ""}
+                value={selectedParents[0] || "none"}
                 onValueChange={(value) => {
                   const newParents = [...selectedParents];
-                  if (value) {
+                  if (value && value !== "none") {
                     newParents[0] = value;
                   } else {
                     newParents.splice(0, 1);
@@ -455,7 +455,7 @@ export function NodeEditor({
                   <SelectValue placeholder="Parent 1" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {members
                     .filter(m => m.id !== member?.id)
                     .map((m) => (
@@ -467,10 +467,10 @@ export function NodeEditor({
               </Select>
               
               <Select
-                value={selectedParents[1] || ""}
+                value={selectedParents[1] || "none"}
                 onValueChange={(value) => {
                   const newParents = [...selectedParents];
-                  if (value) {
+                  if (value && value !== "none") {
                     newParents[1] = value;
                   } else {
                     newParents.splice(1, 1);
@@ -483,7 +483,7 @@ export function NodeEditor({
                   <SelectValue placeholder="Parent 2" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {members
                     .filter(m => m.id !== member?.id)
                     .map((m) => (
@@ -500,9 +500,9 @@ export function NodeEditor({
           <div>
             <Label>Spouse</Label>
             <Select
-              value={selectedSpouse}
+              value={selectedSpouse || "none"}
               onValueChange={(value) => {
-                setSelectedSpouse(value);
+                setSelectedSpouse(value === "none" ? "" : value);
                 setIsDirty(true);
               }}
             >
@@ -510,7 +510,7 @@ export function NodeEditor({
                 <SelectValue placeholder="Select spouse" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {members
                   .filter(m => m.id !== member?.id)
                   .map((m) => (

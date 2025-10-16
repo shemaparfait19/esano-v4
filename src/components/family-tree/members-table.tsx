@@ -50,11 +50,44 @@ export function MembersTable({
 }: MembersTableProps) {
   const [expandedGen, setExpandedGen] = useState<Record<number, boolean>>({});
 
+  // Infer generations from parent edges if missing
+  const inferredGen = useMemo(() => {
+    const parents: Record<string, string[]> = {};
+    const children: Record<string, string[]> = {};
+    edges.forEach((e) => {
+      if (e.type === "parent") {
+        (parents[e.toId] = parents[e.toId] || []).push(e.fromId);
+        (children[e.fromId] = children[e.fromId] || []).push(e.toId);
+      }
+    });
+    const rootIds = members
+      .map((m) => m.id)
+      .filter((id) => !(parents[id] && parents[id].length));
+    const genMap: Record<string, number> = {};
+    const queue: Array<{ id: string; gen: number }> = rootIds.map((id) => ({
+      id,
+      gen: 0,
+    }));
+    while (queue.length) {
+      const { id, gen } = queue.shift()!;
+      if (genMap[id] !== undefined && genMap[id] <= gen) continue;
+      genMap[id] = gen;
+      (children[id] || []).forEach((cid) =>
+        queue.push({ id: cid, gen: gen + 1 })
+      );
+    }
+    return genMap;
+  }, [members, edges]);
+
   const sorted = useMemo(() => {
-    const list = [...members];
-    list.sort((a, b) => (a.generation ?? 0) - (b.generation ?? 0));
+    const list = members
+      .map((m) => ({
+        ...m,
+        generation: m.generation ?? inferredGen[m.id] ?? 0,
+      }))
+      .sort((a, b) => (a.generation ?? 0) - (b.generation ?? 0));
     return list;
-  }, [members]);
+  }, [members, inferredGen]);
 
   const byId = useMemo(
     () => Object.fromEntries(members.map((m) => [m.id, m])),
@@ -115,8 +148,8 @@ export function MembersTable({
 
   const groupedByGeneration = useMemo(() => {
     const groups: Record<number, FamilyMember[]> = {};
-    sorted.forEach((m) => {
-      const gen = m.generation ?? 0;
+    (sorted as any[]).forEach((m) => {
+      const gen = (m.generation as number) ?? 0;
       if (!groups[gen]) groups[gen] = [];
       groups[gen].push(m);
     });

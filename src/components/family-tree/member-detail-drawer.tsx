@@ -292,6 +292,10 @@ export function MemberDetailDrawer({
             {/* Relationship Manager */}
             <div className="space-y-2">
               <Label className="font-medium">Relationships</Label>
+              <p className="text-xs text-muted-foreground">
+                Parent = links selected parent to this person. Spouse =
+                marriage/partner. Extra relation = sibling/cousin/relative.
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label>Parent 1</Label>

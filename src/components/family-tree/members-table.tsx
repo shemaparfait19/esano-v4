@@ -39,6 +39,23 @@ export function MembersTable({
 }: MembersTableProps) {
   const [expandedGen, setExpandedGen] = useState<Record<number, boolean>>({});
 
+  // Helper function to format location
+  const formatLocation = (location: any): string => {
+    if (!location) return "—";
+    if (typeof location === 'string') return location;
+    if (typeof location === 'object') {
+      const parts = [
+        location.village,
+        location.cell,
+        location.sector,
+        location.district,
+        location.province
+      ].filter(Boolean);
+      return parts.length > 0 ? parts.join(", ") : "—";
+    }
+    return "—";
+  };
+
   // Infer generations from parent edges if missing
   const inferredGen = useMemo(() => {
     const parents: Record<string, string[]> = {};
@@ -417,9 +434,7 @@ export function MembersTable({
                       )}
                     </td>
                     <td className="py-4 px-4 text-gray-700">
-                      {typeof m.location === 'object' && m.location
-                        ? `${m.location.village || ''}, ${m.location.cell || ''}, ${m.location.sector || ''}, ${m.location.district || ''}, ${m.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
-                        : m.location || "—"}
+                      {formatLocation(m.location)}
                     </td>
                     <td className="py-4 px-4">
                       {m.tags && m.tags.length > 0 ? (
@@ -572,9 +587,7 @@ export function MembersTable({
                         <div className="flex">
                           <span className="text-gray-500 w-20">Location:</span>
                           <span className="text-gray-900 font-medium">
-                            {typeof m.location === 'object' && m.location
-                              ? `${m.location.village || ''}, ${m.location.cell || ''}, ${m.location.sector || ''}, ${m.location.district || ''}, ${m.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
-                              : m.location}
+                            {formatLocation(m.location)}
                           </span>
                         </div>
                       )}

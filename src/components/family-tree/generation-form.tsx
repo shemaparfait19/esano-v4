@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { LocationSelector } from "./location-selector";
 
 interface GenerationFormProps {
   members: FamilyMember[];
@@ -274,16 +275,15 @@ export function GenerationForm({
                     placeholder="email@example.com"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm">Location</Label>
-                  <Input
-                    value={row.location || ""}
-                    onChange={(e) =>
-                      handleChange(idx, "location", e.target.value)
-                    }
-                    disabled={readonly}
-                    placeholder="City, Country"
-                  />
+                <div className="sm:col-span-2">
+                  <Label className="text-sm font-medium">Location in Rwanda</Label>
+                  <div className="mt-2">
+                    <LocationSelector
+                      value={typeof row.location === 'string' ? undefined : row.location}
+                      onChange={(loc) => handleChange(idx, "location", loc as any)}
+                      disabled={readonly}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

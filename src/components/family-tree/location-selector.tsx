@@ -1,0 +1,238 @@
+"use client";
+
+import React, { useState, useEffect, useMemo } from "react";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import rwandaLocations from "@/data/rwanda-locations.json";
+
+interface LocationSelectorProps {
+  value?: {
+    province?: string;
+    district?: string;
+    sector?: string;
+    cell?: string;
+    village?: string;
+  };
+  onChange: (location: {
+    province: string;
+    district: string;
+    sector: string;
+    cell: string;
+    village: string;
+  }) => void;
+  disabled?: boolean;
+}
+
+export function LocationSelector({ value, onChange, disabled }: LocationSelectorProps) {
+  const [province, setProvince] = useState(value?.province || "");
+  const [district, setDistrict] = useState(value?.district || "");
+  const [sector, setSector] = useState(value?.sector || "");
+  const [cell, setCell] = useState(value?.cell || "");
+  const [village, setVillage] = useState(value?.village || "");
+
+  // Get provinces
+  const provinces = useMemo(() => Object.keys(rwandaLocations), []);
+
+  // Get districts based on selected province
+  const districts = useMemo(() => {
+    if (!province) return [];
+    return Object.keys((rwandaLocations as any)[province] || {});
+  }, [province]);
+
+  // Get sectors based on selected district
+  const sectors = useMemo(() => {
+    if (!province || !district) return [];
+    return Object.keys((rwandaLocations as any)[province]?.[district] || {});
+  }, [province, district]);
+
+  // Get cells based on selected sector
+  const cells = useMemo(() => {
+    if (!province || !district || !sector) return [];
+    return Object.keys((rwandaLocations as any)[province]?.[district]?.[sector] || {});
+  }, [province, district, sector]);
+
+  // Get villages based on selected cell
+  const villages = useMemo(() => {
+    if (!province || !district || !sector || !cell) return [];
+    return (rwandaLocations as any)[province]?.[district]?.[sector]?.[cell] || [];
+  }, [province, district, sector, cell]);
+
+  // Reset dependent selections when parent changes
+  useEffect(() => {
+    if (province !== value?.province) {
+      setDistrict("");
+      setSector("");
+      setCell("");
+      setVillage("");
+    }
+  }, [province, value?.province]);
+
+  useEffect(() => {
+    if (district !== value?.district) {
+      setSector("");
+      setCell("");
+      setVillage("");
+    }
+  }, [district, value?.district]);
+
+  useEffect(() => {
+    if (sector !== value?.sector) {
+      setCell("");
+      setVillage("");
+    }
+  }, [sector, value?.sector]);
+
+  useEffect(() => {
+    if (cell !== value?.cell) {
+      setVillage("");
+    }
+  }, [cell, value?.cell]);
+
+  // Notify parent of complete selection
+  useEffect(() => {
+    if (province && district && sector && cell && village) {
+      onChange({ province, district, sector, cell, village });
+    }
+  }, [province, district, sector, cell, village, onChange]);
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Province */}
+        <div className="space-y-2">
+          <Label className="text-sm">Province</Label>
+          <Select
+            value={province}
+            onValueChange={(v) => {
+              setProvince(v);
+              setDistrict("");
+              setSector("");
+              setCell("");
+              setVillage("");
+            }}
+            disabled={disabled}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select province" />
+            </SelectTrigger>
+            <SelectContent>
+              {provinces.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* District */}
+        <div className="space-y-2">
+          <Label className="text-sm">District</Label>
+          <Select
+            value={district}
+            onValueChange={(v) => {
+              setDistrict(v);
+              setSector("");
+              setCell("");
+              setVillage("");
+            }}
+            disabled={disabled || !province}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select district" />
+            </SelectTrigger>
+            <SelectContent>
+              {districts.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Sector */}
+        <div className="space-y-2">
+          <Label className="text-sm">Sector</Label>
+          <Select
+            value={sector}
+            onValueChange={(v) => {
+              setSector(v);
+              setCell("");
+              setVillage("");
+            }}
+            disabled={disabled || !district}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select sector" />
+            </SelectTrigger>
+            <SelectContent>
+              {sectors.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Cell */}
+        <div className="space-y-2">
+          <Label className="text-sm">Cell</Label>
+          <Select
+            value={cell}
+            onValueChange={(v) => {
+              setCell(v);
+              setVillage("");
+            }}
+            disabled={disabled || !sector}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select cell" />
+            </SelectTrigger>
+            <SelectContent>
+              {cells.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Village */}
+        <div className="space-y-2 sm:col-span-2">
+          <Label className="text-sm">Village</Label>
+          <Select
+            value={village}
+            onValueChange={setVillage}
+            disabled={disabled || !cell}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select village" />
+            </SelectTrigger>
+            <SelectContent>
+              {villages.map((v: string) => (
+                <SelectItem key={v} value={v}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {province && district && sector && cell && village && (
+        <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2">
+          <strong>Location:</strong> {village}, {cell}, {sector}, {district}, {province}
+        </div>
+      )}
+    </div>
+  );
+}

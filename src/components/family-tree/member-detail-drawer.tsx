@@ -22,6 +22,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { RelationshipInferenceEngine } from "@/lib/relationship-inference-engine";
 import { Sparkles, Info } from "lucide-react";
+import { LocationSelector } from "./location-selector";
 
 interface MemberDetailDrawerProps {
   open: boolean;
@@ -351,10 +352,10 @@ export function MemberDetailDrawer({
                 />
               </div>
             </div>
-            <Label>Location</Label>
-            <Input
-              value={draft.location || ""}
-              onChange={(e) => handleField("location", e.target.value)}
+            <Label>Location in Rwanda</Label>
+            <LocationSelector
+              value={typeof draft.location === 'string' ? undefined : draft.location}
+              onChange={(loc) => handleField("location", loc as any)}
               disabled={readonly}
             />
             <Label>Tags (comma separated)</Label>

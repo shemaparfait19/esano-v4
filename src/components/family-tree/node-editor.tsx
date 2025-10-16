@@ -31,12 +31,26 @@ export function NodeEditor({
   onSave,
   onDelete,
 }: NodeEditorProps) {
-  const { getMember, updateMember } = useFamilyTreeStore();
+  const { getMember, updateMember, members, edges, addEdge, removeEdge } = useFamilyTreeStore();
   const { setDirty } = useFamilyTreeStore();
   const [formData, setFormData] = useState<Partial<FamilyMember>>({});
   const [isDirty, setIsDirty] = useState(false);
+  
+  // Relationship state
+  const [selectedParents, setSelectedParents] = useState<string[]>([]);
+  const [selectedSpouse, setSelectedSpouse] = useState<string>("");
 
   const member = nodeId ? getMember(nodeId) : null;
+  
+  // Get current relationships
+  const currentParents = edges
+    .filter(e => e.type === "parent" && e.toId === nodeId)
+    .map(e => e.fromId);
+  const currentSpouse = edges
+    .find(e => e.type === "spouse" && (e.fromId === nodeId || e.toId === nodeId));
+  const currentSpouseId = currentSpouse 
+    ? (currentSpouse.fromId === nodeId ? currentSpouse.toId : currentSpouse.fromId)
+    : "";
 
   useEffect(() => {
     if (member) {
@@ -54,9 +68,11 @@ export function NodeEditor({
         originRegion: member.originRegion,
         contacts: member.contacts,
       });
+      setSelectedParents(currentParents);
+      setSelectedSpouse(currentSpouseId);
       setIsDirty(false);
     }
-  }, [member]);
+  }, [member, currentParents, currentSpouseId]);
 
   const handleInputChange = (field: keyof FamilyMember, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -64,19 +80,54 @@ export function NodeEditor({
   };
 
   const handleSave = () => {
-    if (!member || !isDirty) return;
+    if (!member) return;
 
-    const updatedMember: FamilyMember = {
-      ...member,
-      ...formData,
-      fullName: `${formData.firstName || ""} ${formData.lastName || ""}`.trim(),
-      updatedAt: new Date().toISOString(),
-    };
+    // Update member data
+    if (isDirty) {
+      const updatedMember: FamilyMember = {
+        ...member,
+        ...formData,
+        fullName: `${formData.firstName || ""} ${formData.lastName || ""}`.trim(),
+        updatedAt: new Date().toISOString(),
+      };
+      updateMember(member.id, updatedMember);
+      onSave(updatedMember);
+    }
 
-    updateMember(member.id, updatedMember);
-    onSave(updatedMember);
+    // Update parent relationships
+    const parentsToAdd = selectedParents.filter(p => !currentParents.includes(p));
+    const parentsToRemove = currentParents.filter(p => !selectedParents.includes(p));
+    
+    parentsToRemove.forEach(parentId => {
+      const edge = edges.find(e => 
+        e.type === "parent" && e.fromId === parentId && e.toId === member.id
+      );
+      if (edge) removeEdge(edge.id);
+    });
+    
+    parentsToAdd.forEach(parentId => {
+      addEdge({ fromId: parentId, toId: member.id, type: "parent" });
+    });
+
+    // Update spouse relationship
+    if (selectedSpouse !== currentSpouseId) {
+      // Remove old spouse edge
+      if (currentSpouse) {
+        removeEdge(currentSpouse.id);
+      }
+      // Add new spouse edge
+      if (selectedSpouse) {
+        addEdge({ fromId: member.id, toId: selectedSpouse, type: "spouse" });
+      }
+    }
+
     setIsDirty(false);
     setDirty(true);
+    
+    console.log('💾 Saved member with relationships:', {
+      parents: selectedParents,
+      spouse: selectedSpouse
+    });
   };
 
   const toggleHead = () => {
@@ -377,6 +428,99 @@ export function NodeEditor({
             placeholder="Additional information, stories, etc."
             rows={3}
           />
+        </div>
+
+        {/* Relationships Section */}
+        <div className="border-t pt-4 space-y-4">
+          <h3 className="font-semibold text-sm">Family Relationships</h3>
+          
+          {/* Parents */}
+          <div>
+            <Label>Parents</Label>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <Select
+                value={selectedParents[0] || ""}
+                onValueChange={(value) => {
+                  const newParents = [...selectedParents];
+                  if (value) {
+                    newParents[0] = value;
+                  } else {
+                    newParents.splice(0, 1);
+                  }
+                  setSelectedParents(newParents.filter(Boolean));
+                  setIsDirty(true);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Parent 1" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {members
+                    .filter(m => m.id !== member?.id)
+                    .map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.fullName}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              
+              <Select
+                value={selectedParents[1] || ""}
+                onValueChange={(value) => {
+                  const newParents = [...selectedParents];
+                  if (value) {
+                    newParents[1] = value;
+                  } else {
+                    newParents.splice(1, 1);
+                  }
+                  setSelectedParents(newParents.filter(Boolean));
+                  setIsDirty(true);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Parent 2" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {members
+                    .filter(m => m.id !== member?.id)
+                    .map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.fullName}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Spouse */}
+          <div>
+            <Label>Spouse</Label>
+            <Select
+              value={selectedSpouse}
+              onValueChange={(value) => {
+                setSelectedSpouse(value);
+                setIsDirty(true);
+              }}
+            >
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Select spouse" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {members
+                  .filter(m => m.id !== member?.id)
+                  .map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.fullName}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Media */}

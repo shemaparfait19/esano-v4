@@ -1,7 +1,4 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { Buffer } from "buffer";
 import { adminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
@@ -27,14 +24,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save file to local uploads folder
+    // Read file buffer
     console.log('💾 Reading file buffer...');
     const arrayBuffer = await file.arrayBuffer();
-    const MAX_BYTES = 50 * 1024 * 1024; // 50 MB limit
+    const MAX_BYTES = 10 * 1024 * 1024; // 10 MB limit for Firestore
     console.log(`📊 File size: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
     if (arrayBuffer.byteLength > MAX_BYTES) {
       return NextResponse.json(
-        { error: "File too large. Max 50 MB." },
+        { error: "File too large. Max 10 MB." },
         { status: 413 }
       );
     }
@@ -52,31 +49,32 @@ export async function POST(request: Request) {
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 8);
     const extension = file.name.split('.').pop() || 'bin';
-    const filename = `${userId}_${memberId}_${timestamp}_${randomStr}.${extension}`;
+    const filename = `${folder}_${userId}_${memberId}_${timestamp}_${randomStr}.${extension}`;
     
-    let fileUrl: string;
+    // Convert to base64 and store in Firestore
+    console.log('🔄 Converting to base64...');
+    const base64Content = btoa(
+      String.fromCharCode(...new Uint8Array(arrayBuffer))
+    );
     
-    try {
-      // Try to save to local file system (works in development)
-      const uploadDir = join(process.cwd(), 'public', 'uploads', folder);
-      console.log('📁 Creating directory:', uploadDir);
-      await mkdir(uploadDir, { recursive: true });
-      
-      const filePath = join(uploadDir, filename);
-      console.log('💾 Saving file to:', filePath);
-      const buffer = Buffer.from(arrayBuffer);
-      await writeFile(filePath, buffer);
-      console.log('✅ File saved successfully to disk');
-      
-      fileUrl = `/uploads/${folder}/${filename}`;
-      console.log('🔗 Public URL:', fileUrl);
-    } catch (fsError) {
-      // Fallback to base64 data URL (works on Vercel/serverless)
-      console.warn('⚠️ File system not writable, using base64 fallback:', fsError);
-      const base64 = Buffer.from(arrayBuffer).toString('base64');
-      fileUrl = `data:${file.type};base64,${base64}`;
-      console.log('✅ Using base64 data URL');
-    }
+    console.log('💾 Saving to Firestore uploadedDocuments collection...');
+    const fileDoc = await adminDb.collection("uploadedDocuments").add({
+      userId,
+      memberId,
+      fileName: file.name,
+      storedFileName: filename,
+      fileType: file.type,
+      fileSize: file.size,
+      kind,
+      content: base64Content,
+      uploadedAt: new Date().toISOString(),
+    });
+    
+    console.log('✅ File stored in Firestore with ID:', fileDoc.id);
+    
+    // Create a data URL for immediate use
+    const fileUrl = `data:${file.type};base64,${base64Content}`;
+    console.log('🔗 Data URL created');
 
     const ref = adminDb.collection("familyTrees").doc(userId);
     const snap = await ref.get();

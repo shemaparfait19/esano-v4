@@ -106,16 +106,23 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
 
     // Actions
     setTree: (tree) =>
-      set((state) => ({
-        past: state.tree ? [...state.past, state.tree].slice(-50) : state.past,
-        future: [],
-        tree,
-        members: tree.members,
-        edges: tree.edges,
-        generations: tree.generations || [], // Added generations update
-        error: null,
-        dirty: false,
-      })),
+      set((state) => {
+        // Ensure generations array exists
+        const updatedTree = {
+          ...tree,
+          generations: tree.generations || [],
+        };
+
+        return {
+          past: state.tree ? [...state.past, state.tree].slice(-50) : state.past,
+          future: [],
+          tree: updatedTree,
+          members: updatedTree.members,
+          edges: updatedTree.edges,
+          error: null,
+          dirty: false,
+        };
+      }),
 
     addMember: (memberData) => {
       const newMember: FamilyMember = {
@@ -127,19 +134,22 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
         level: 1,
       };
 
-      set((state) => ({
-        past: state.tree ? [...state.past, state.tree].slice(-50) : state.past,
-        future: [],
-        members: [...state.members, newMember],
-        tree: state.tree
-          ? {
-              ...state.tree,
-              members: [...state.members, newMember],
-              updatedAt: new Date().toISOString(),
-            }
-          : null,
-        dirty: true,
-      }));
+      set((state) => {
+        const updatedMembers = [...state.members, newMember];
+        const updatedTree = {
+          ...state.tree,
+          members: updatedMembers,
+          updatedAt: new Date().toISOString(),
+        };
+
+        return {
+          past: state.tree ? [...state.past, state.tree].slice(-50) : state.past,
+          future: [],
+          members: updatedMembers,
+          tree: updatedTree,
+          dirty: true,
+        };
+      });
     },
 
     updateMember: (id, updates) => {
@@ -150,19 +160,19 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
             : member
         );
 
+        const updatedTree = {
+          ...state.tree,
+          members: updatedMembers,
+          updatedAt: new Date().toISOString(),
+        };
+
         return {
           past: state.tree
             ? [...state.past, state.tree].slice(-50)
             : state.past,
           future: [],
           members: updatedMembers,
-          tree: state.tree
-            ? {
-                ...state.tree,
-                members: updatedMembers,
-                updatedAt: new Date().toISOString(),
-              }
-            : null,
+          tree: updatedTree,
           dirty: true,
         };
       });
@@ -177,6 +187,13 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
           (edge) => edge.fromId !== id && edge.toId !== id
         );
 
+        const updatedTree = {
+          ...state.tree,
+          members: filteredMembers,
+          edges: filteredEdges,
+          updatedAt: new Date().toISOString(),
+        };
+
         return {
           past: state.tree
             ? [...state.past, state.tree].slice(-50)
@@ -186,14 +203,7 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
           edges: filteredEdges,
           selectedNode: state.selectedNode === id ? null : state.selectedNode,
           editingNode: state.editingNode === id ? null : state.editingNode,
-          tree: state.tree
-            ? {
-                ...state.tree,
-                members: filteredMembers,
-                edges: filteredEdges,
-                updatedAt: new Date().toISOString(),
-              }
-            : null,
+          tree: updatedTree,
           dirty: true,
         };
       });
@@ -226,6 +236,13 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
           return m;
         });
 
+        const updatedTree = {
+          ...state.tree,
+          members: updatedMembers,
+          edges: [...state.edges, newEdge],
+          updatedAt: new Date().toISOString(),
+        };
+
         return {
           past: state.tree
             ? [...state.past, state.tree].slice(-50)
@@ -233,14 +250,7 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
           future: [],
           members: updatedMembers,
           edges: [...state.edges, newEdge],
-          tree: state.tree
-            ? {
-                ...state.tree,
-                members: updatedMembers,
-                edges: [...state.edges, newEdge],
-                updatedAt: new Date().toISOString(),
-              }
-            : null,
+          tree: updatedTree,
           dirty: true,
         };
       });
@@ -250,19 +260,19 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
       set((state) => {
         const filteredEdges = state.edges.filter((edge) => edge.id !== id);
 
+        const updatedTree = {
+          ...state.tree,
+          edges: filteredEdges,
+          updatedAt: new Date().toISOString(),
+        };
+
         return {
           past: state.tree
             ? [...state.past, state.tree].slice(-50)
             : state.past,
           future: [],
           edges: filteredEdges,
-          tree: state.tree
-            ? {
-                ...state.tree,
-                edges: filteredEdges,
-                updatedAt: new Date().toISOString(),
-              }
-            : null,
+          tree: updatedTree,
           dirty: true,
         };
       });
@@ -283,19 +293,19 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
             : edge
         );
 
+        const updatedTree = {
+          ...state.tree,
+          edges: updatedEdges,
+          updatedAt: new Date().toISOString(),
+        };
+
         return {
           past: state.tree
             ? [...state.past, state.tree].slice(-50)
             : state.past,
           future: [],
           edges: updatedEdges,
-          tree: state.tree
-            ? {
-                ...state.tree,
-                edges: updatedEdges,
-                updatedAt: new Date().toISOString(),
-              }
-            : null,
+          tree: updatedTree,
           dirty: true,
         };
       });

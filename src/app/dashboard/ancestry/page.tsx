@@ -101,10 +101,9 @@ export default function AncestryBookPage() {
     Map<string, { url: string; type: "photo" | "video" }>
   >(new Map());
   
-  // Get the member ID from the URL if we're viewing a specific member
+  // Get the member ID and owner ID from the URL if we're viewing a specific member
   const viewMemberId = searchParams?.get('memberId') || undefined;
-  const ownerId = searchParams?.get('ownerId') || undefined;
-  const [ownerId, setOwnerId] = useState<string | null>(null);
+  const ownerId = searchParams?.get('ownerId') || null;
   const [accessible, setAccessible] = useState<
     Array<{ ownerId: string; label: string; role: "viewer" | "editor" }>
   >([]);

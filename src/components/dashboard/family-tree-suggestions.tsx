@@ -176,7 +176,11 @@ export function FamilyTreeSuggestions({
                     {headMember?.location && (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
-                        <span>{headMember.location}</span>
+                        <span>
+                          {typeof headMember.location === 'object' && headMember.location
+                            ? `${headMember.location.village || ''}, ${headMember.location.district || ''}, ${headMember.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                            : headMember.location}
+                        </span>
                       </div>
                     )}
                   </div>

@@ -417,7 +417,9 @@ export function MembersTable({
                       )}
                     </td>
                     <td className="py-4 px-4 text-gray-700">
-                      {m.location || "—"}
+                      {typeof m.location === 'object' && m.location
+                        ? `${m.location.village || ''}, ${m.location.cell || ''}, ${m.location.sector || ''}, ${m.location.district || ''}, ${m.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                        : m.location || "—"}
                     </td>
                     <td className="py-4 px-4">
                       {m.tags && m.tags.length > 0 ? (

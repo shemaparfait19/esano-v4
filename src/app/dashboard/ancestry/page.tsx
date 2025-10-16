@@ -270,8 +270,11 @@ export default function AncestryBookPage() {
       const isDeceased =
         m.isDeceased || (!!m.deathDate && m.deathDate.length > 0);
       const title = m.fullName;
+      const locationStr = typeof m.location === 'object' && m.location
+        ? `${m.location.village || ''}, ${m.location.district || ''}, ${m.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+        : m.location;
       const origin =
-        m.originRegion || (m.location ? `Lives in ${m.location}` : undefined);
+        m.originRegion || (locationStr ? `Lives in ${locationStr}` : undefined);
       const subtitle = relations.get(m.id) || origin;
       const content: string[] = [];
 
@@ -336,12 +339,16 @@ export default function AncestryBookPage() {
           });
       }
 
-      if (m.birthDate)
+      if (m.birthDate) {
+        const birthLocationStr = typeof m.location === 'object' && m.location
+          ? `${m.location.village || ''}, ${m.location.district || ''}, ${m.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+          : m.location;
         content.push(
           `Born on ${new Date(m.birthDate).toDateString()}${
-            m.location ? ` in ${m.location}` : ""
+            birthLocationStr ? ` in ${birthLocationStr}` : ""
           }.`
         );
+      }
       if (isDeceased)
         content.push(
           `Deceased${

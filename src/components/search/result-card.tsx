@@ -203,7 +203,11 @@ export default function ResultCard({
               {result.preview.location && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
-                  <span>{result.preview.location}</span>
+                  <span>
+                    {typeof result.preview.location === 'object' && result.preview.location
+                      ? `${result.preview.location.village || ''}, ${result.preview.location.district || ''}, ${result.preview.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                      : result.preview.location}
+                  </span>
                 </div>
               )}
               {result.preview.birthDate && (

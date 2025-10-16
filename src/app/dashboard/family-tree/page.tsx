@@ -66,6 +66,7 @@ import { FamilyTreeSuggestions } from "@/components/dashboard/family-tree-sugges
 import { FamilyCodeGenerator } from "@/components/family-tree/family-code-generator";
 import { GenerationManager } from "@/components/family-tree/generation-manager";
 import { MemberView } from "@/components/family-tree/member-view";
+import { cleanupOrphanedEdges } from "@/lib/cleanup-orphaned-edges";
 
 export default function FamilyTreePage() {
   const { user, userProfile } = useAuth();
@@ -429,6 +430,34 @@ export default function FamilyTreePage() {
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to load family tree");
+      }
+
+      // Clean up orphaned edges before setting the tree
+      if (data.tree && data.tree.members && data.tree.edges) {
+        const { cleanedEdges, removedCount, removedEdges } = cleanupOrphanedEdges(
+          data.tree.members,
+          data.tree.edges
+        );
+
+        if (removedCount > 0) {
+          console.log(`🧹 Cleaned up ${removedCount} orphaned edges:`, removedEdges);
+          data.tree.edges = cleanedEdges;
+          
+          // Auto-save the cleaned tree
+          try {
+            await fetch("/api/family-tree", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: ownerId, tree: data.tree }),
+            });
+            toast({
+              title: "Tree cleaned",
+              description: `Removed ${removedCount} broken relationship(s)`,
+            });
+          } catch (saveError) {
+            console.error("Failed to save cleaned tree:", saveError);
+          }
+        }
       }
 
       setTree(data.tree);

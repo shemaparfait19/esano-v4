@@ -555,7 +555,9 @@ export function MemberView({ memberId, onClose, onEdit, onView, className }: Mem
                   )}
                   {renderInfoRow(
                     'Birthplace / Residence',
-                    member.location || '—',
+                    typeof member.location === 'object' && member.location
+                      ? `${member.location.village || ''}, ${member.location.cell || ''}, ${member.location.sector || ''}, ${member.location.district || ''}, ${member.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                      : member.location || '—',
                     <MapPin className="h-4 w-4" />
                   )}
                   {member.occupation && renderInfoRow(

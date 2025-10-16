@@ -570,7 +570,9 @@ export function MembersTable({
                         <div className="flex">
                           <span className="text-gray-500 w-20">Location:</span>
                           <span className="text-gray-900 font-medium">
-                            {m.location}
+                            {typeof m.location === 'object' && m.location
+                              ? `${m.location.village || ''}, ${m.location.cell || ''}, ${m.location.sector || ''}, ${m.location.district || ''}, ${m.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                              : m.location}
                           </span>
                         </div>
                       )}

@@ -52,7 +52,13 @@ export interface FamilyMember {
   avatarUrl?: string;
   mediaUrls?: string[];
   notes?: string;
-  location?: string;
+  location?: string | {
+    province?: string;
+    district?: string;
+    sector?: string;
+    cell?: string;
+    village?: string;
+  };
   customFields: Record<string, any>;
   createdAt: string;
   updatedAt: string;

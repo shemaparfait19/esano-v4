@@ -279,7 +279,7 @@ export function GenerationForm({
                   <Label className="text-sm font-medium">Location in Rwanda</Label>
                   <div className="mt-2">
                     <LocationSelector
-                      value={typeof row.location === 'string' ? undefined : row.location}
+                      value={typeof row.location === 'object' && row.location ? row.location as any : undefined}
                       onChange={(loc) => handleChange(idx, "location", loc as any)}
                       disabled={readonly}
                     />

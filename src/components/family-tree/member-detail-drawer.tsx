@@ -358,7 +358,7 @@ export function MemberDetailDrawer({
             </div>
             <Label>Location in Rwanda</Label>
             <LocationSelector
-              value={typeof draft.location === 'string' ? undefined : draft.location}
+              value={typeof draft.location === 'object' && draft.location ? draft.location as any : undefined}
               onChange={(loc) => handleField("location", loc as any)}
               disabled={readonly}
             />

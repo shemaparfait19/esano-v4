@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-// @ts-ignore - Buffer is available in Node runtime
-import { Buffer } from "buffer";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
 import { adminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
@@ -23,18 +23,42 @@ export async function POST(request: Request) {
       );
     }
 
-    // In a real app, upload to Cloud Storage/S3 and get a URL.
-    // For now, store a data URL (small files only) for demo purposes.
+    // Save file to local uploads folder
     const arrayBuffer = await file.arrayBuffer();
-    const MAX_BYTES = 2 * 1024 * 1024; // 2 MB limit for demo
+    const MAX_BYTES = 50 * 1024 * 1024; // 50 MB limit
     if (arrayBuffer.byteLength > MAX_BYTES) {
       return NextResponse.json(
-        { error: "File too large. Max 2 MB for now. Try a shorter clip." },
+        { error: "File too large. Max 50 MB." },
         { status: 413 }
       );
     }
-    const base64 = Buffer.from(arrayBuffer).toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64}`;
+    
+    // Determine folder based on kind
+    const folderMap: Record<string, string> = {
+      media: "media",
+      voice: "voice",
+      timeline: "timeline",
+      document: "documents"
+    };
+    const folder = folderMap[kind] || "media";
+    
+    // Generate unique filename
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const extension = file.name.split('.').pop() || 'bin';
+    const filename = `${userId}_${memberId}_${timestamp}_${randomStr}.${extension}`;
+    
+    // Create directory if it doesn't exist
+    const uploadDir = join(process.cwd(), 'public', 'uploads', folder);
+    await mkdir(uploadDir, { recursive: true });
+    
+    // Save file
+    const filePath = join(uploadDir, filename);
+    const buffer = Buffer.from(arrayBuffer);
+    await writeFile(filePath, buffer);
+    
+    // Public URL path
+    const fileUrl = `/uploads/${folder}/${filename}`;
 
     const ref = adminDb.collection("familyTrees").doc(userId);
     const snap = await ref.get();
@@ -64,7 +88,11 @@ export async function POST(request: Request) {
     const applyToMember = (m: any) => {
       if (kind === "voice") {
         const voice = Array.isArray(m.voiceUrls) ? m.voiceUrls : [];
-        return { ...m, voiceUrls: [...voice, dataUrl] };
+        return { ...m, voiceUrls: [...voice, fileUrl] };
+      }
+      if (kind === "document") {
+        const docs = Array.isArray(m.documentUrls) ? m.documentUrls : [];
+        return { ...m, documentUrls: [...docs, { url: fileUrl, name: file.name, uploadedAt: new Date().toISOString() }] };
       }
       if (kind === "timeline") {
         const timeline = Array.isArray(m.timeline) ? m.timeline : [];
@@ -81,13 +109,13 @@ export async function POST(request: Request) {
                 : "photo",
               date,
               title,
-              url: dataUrl,
+              url: fileUrl,
             },
           ],
         };
       }
       const media = Array.isArray(m.mediaUrls) ? m.mediaUrls : [];
-      return { ...m, mediaUrls: [...media, dataUrl] };
+      return { ...m, mediaUrls: [...media, fileUrl] };
     };
 
     if (idx >= 0) {
@@ -113,7 +141,7 @@ export async function POST(request: Request) {
     tree.updatedAt = new Date().toISOString();
     // Merge to reduce overwrite risks
     await ref.set(tree, { merge: true } as any);
-    return NextResponse.json({ success: true, url: dataUrl });
+    return NextResponse.json({ success: true, url: fileUrl });
   } catch (e: any) {
     console.error("Media upload error:", e);
     return NextResponse.json(

@@ -161,7 +161,11 @@ export default function MemberProfilePage({
             <div className="text-xs text-muted-foreground">
               Birthplace / Residence
             </div>
-            <div className="text-sm">{member.location || "—"}</div>
+            <div className="text-sm">
+              {typeof member.location === 'object' && member.location?.village
+                ? `${member.location.village}, ${member.location.cell}, ${member.location.sector}, ${member.location.district}, ${member.location.province}`
+                : member.location || "—"}
+            </div>
           </div>
         </Card>
 
@@ -296,6 +300,33 @@ export default function MemberProfilePage({
           {(!member.voiceUrls || member.voiceUrls.length === 0) && (
             <div className="text-sm text-muted-foreground">
               No voice memories yet.
+            </div>
+          )}
+        </Card>
+
+        {/* Documents */}
+        <Card className="p-4">
+          <div className="text-sm font-medium mb-2">Documents</div>
+          <div className="space-y-2">
+            {(member.documentUrls || []).map((doc: any, i) => (
+              <div key={i} className="flex items-center gap-2 p-2 border rounded">
+                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <a 
+                  href={typeof doc === 'string' ? doc : doc.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex-1 text-sm text-blue-600 hover:underline"
+                >
+                  {typeof doc === 'object' && doc.name ? doc.name : `Document ${i + 1}`}
+                </a>
+              </div>
+            ))}
+          </div>
+          {(!member.documentUrls || member.documentUrls.length === 0) && (
+            <div className="text-sm text-muted-foreground">
+              No documents uploaded yet.
             </div>
           )}
         </Card>

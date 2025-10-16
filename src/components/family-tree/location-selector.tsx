@@ -36,6 +36,15 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
   const [cell, setCell] = useState(value?.cell || "");
   const [village, setVillage] = useState(value?.village || "");
 
+  // Update state when value prop changes (for editing existing members)
+  useEffect(() => {
+    if (value?.province) setProvince(value.province);
+    if (value?.district) setDistrict(value.district);
+    if (value?.sector) setSector(value.sector);
+    if (value?.cell) setCell(value.cell);
+    if (value?.village) setVillage(value.village);
+  }, [value]);
+
   // Get provinces
   const provinces = useMemo(() => Object.keys(rwandaLocations), []);
 
@@ -65,36 +74,42 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
     return Array.isArray(data) ? data.filter(v => typeof v === 'string') : [];
   }, [province, district, sector, cell]);
 
-  // Reset dependent selections when parent changes
+  // Reset dependent selections when parent changes (only when manually changed, not from prop updates)
+  const [manualChange, setManualChange] = useState(false);
+
   useEffect(() => {
-    if (province !== value?.province) {
+    if (manualChange && province && province !== value?.province) {
       setDistrict("");
       setSector("");
       setCell("");
       setVillage("");
     }
-  }, [province, value?.province]);
+    setManualChange(false);
+  }, [province]);
 
   useEffect(() => {
-    if (district !== value?.district) {
+    if (manualChange && district && district !== value?.district) {
       setSector("");
       setCell("");
       setVillage("");
     }
-  }, [district, value?.district]);
+    setManualChange(false);
+  }, [district]);
 
   useEffect(() => {
-    if (sector !== value?.sector) {
+    if (manualChange && sector && sector !== value?.sector) {
       setCell("");
       setVillage("");
     }
-  }, [sector, value?.sector]);
+    setManualChange(false);
+  }, [sector]);
 
   useEffect(() => {
-    if (cell !== value?.cell) {
+    if (manualChange && cell && cell !== value?.cell) {
       setVillage("");
     }
-  }, [cell, value?.cell]);
+    setManualChange(false);
+  }, [cell]);
 
   // Notify parent of complete selection
   useEffect(() => {
@@ -112,11 +127,8 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
           <Select
             value={province}
             onValueChange={(v) => {
+              setManualChange(true);
               setProvince(v);
-              setDistrict("");
-              setSector("");
-              setCell("");
-              setVillage("");
             }}
             disabled={disabled}
           >
@@ -139,10 +151,8 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
           <Select
             value={district}
             onValueChange={(v) => {
+              setManualChange(true);
               setDistrict(v);
-              setSector("");
-              setCell("");
-              setVillage("");
             }}
             disabled={disabled || !province}
           >
@@ -165,9 +175,8 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
           <Select
             value={sector}
             onValueChange={(v) => {
+              setManualChange(true);
               setSector(v);
-              setCell("");
-              setVillage("");
             }}
             disabled={disabled || !district}
           >
@@ -190,8 +199,8 @@ export function LocationSelector({ value, onChange, disabled }: LocationSelector
           <Select
             value={cell}
             onValueChange={(v) => {
+              setManualChange(true);
               setCell(v);
-              setVillage("");
             }}
             disabled={disabled || !sector}
           >

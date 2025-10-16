@@ -11,6 +11,7 @@ import { MemberDetailDrawer } from "@/components/family-tree/member-detail-drawe
 import { TreeToolbar } from "@/components/family-tree/tree-toolbar";
 import { NodeEditor } from "@/components/family-tree/node-editor";
 import { RelationshipsTable } from "@/components/family-tree/relationships-table";
+import { AdvancedSearch } from "@/components/family-tree/advanced-search";
 import { FamilyMember, FamilyEdge } from "@/types/family-tree";
 import { Button } from "@/components/ui/button";
 import {
@@ -1308,6 +1309,13 @@ export default function FamilyTreePage() {
                     onSave={saveFamilyTree}
                   />
                 )}
+                
+                {/* Advanced Search */}
+                <AdvancedSearch
+                  members={members as any}
+                  onSelectMember={(id) => setEditingNode(id)}
+                />
+                
                 <MembersTable
                   members={members as any}
                   edges={edges as any}

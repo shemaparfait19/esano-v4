@@ -107,7 +107,7 @@ export function MemberDetailDrawer({
 
   if (!draft) return null;
 
-  async function upload(kind: "media" | "voice" | "timeline", file: File) {
+  async function upload(kind: "media" | "voice" | "timeline" | "document", file: File) {
     try {
       setUploading(true);
       const form = new FormData();
@@ -128,6 +128,10 @@ export function MemberDetailDrawer({
         if (kind === "voice") {
           const list = Array.isArray(prev.voiceUrls) ? prev.voiceUrls : [];
           return { ...prev, voiceUrls: [...list, data.url] } as any;
+        }
+        if (kind === "document") {
+          const list = Array.isArray(prev.documentUrls) ? prev.documentUrls : [];
+          return { ...prev, documentUrls: [...list, { url: data.url, name: file.name, uploadedAt: new Date().toISOString() }] } as any;
         }
         if (kind === "timeline") {
           const list = Array.isArray(prev.timeline) ? prev.timeline : [];
@@ -667,10 +671,11 @@ export function MemberDetailDrawer({
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (!f) return;
-                  if (f.size > 2 * 1024 * 1024) {
+                  const maxSize = 50 * 1024 * 1024; // 50MB
+                  if (f.size > maxSize) {
                     toast({
                       title: "File too large",
-                      description: "Max 2MB",
+                      description: "Max size is 50MB",
                       variant: "destructive",
                     });
                     return;
@@ -679,6 +684,49 @@ export function MemberDetailDrawer({
                 }}
                 disabled={readonly || uploading}
               />
+              {draft.voiceUrls && draft.voiceUrls.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {draft.voiceUrls.map((url, i) => (
+                    <audio key={i} src={url} controls className="w-full" />
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <Label>Upload documents (PDF, Word, etc.)</Label>
+              <Input
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,.xlsx,.xls"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const maxSize = 50 * 1024 * 1024; // 50MB
+                  if (f.size > maxSize) {
+                    toast({
+                      title: "File too large",
+                      description: "Max size is 50MB",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  upload("document", f);
+                }}
+                disabled={readonly || uploading}
+              />
+              {draft.documentUrls && draft.documentUrls.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {draft.documentUrls.map((doc: any, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 border rounded text-xs">
+                      <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <a href={typeof doc === 'string' ? doc : doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {typeof doc === 'object' && doc.name ? doc.name : `Document ${i + 1}`}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <Label>Add timeline media</Label>

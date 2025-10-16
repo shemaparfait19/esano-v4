@@ -156,35 +156,60 @@ export function MemberDetailDrawer({
   function saveRelationships() {
     if (!draft) return;
     const me = draft.id;
+    
+    console.log('💾 Saving relationships for:', draft.fullName);
+    console.log('  Parents:', [relParent1, relParent2].filter(Boolean));
+    console.log('  Spouse:', relSpouse);
+    
     const desiredParents = [relParent1, relParent2].filter(Boolean) as string[];
     const currentParentEdges = edges.filter(
       (e) => e.type === "parent" && e.toId === me
     );
+    
+    // Remove old parent edges
     currentParentEdges.forEach((e) => {
-      if (!desiredParents.includes(e.fromId)) onRemoveEdge?.(e.id);
+      if (!desiredParents.includes(e.fromId)) {
+        console.log('  ➖ Removing parent edge:', e.fromId);
+        onRemoveEdge?.(e.id);
+      }
     });
+    
+    // Add new parent edges
     desiredParents.forEach((pid) => {
       const exists = currentParentEdges.some((e) => e.fromId === pid);
-      if (!exists) onAddEdge?.({ fromId: pid, toId: me, type: "parent" });
+      if (!exists) {
+        console.log('  ➕ Adding parent edge:', pid);
+        onAddEdge?.({ fromId: pid, toId: me, type: "parent" });
+      }
     });
 
     const desiredSpouse = relSpouse || "";
     const currentSpouseEdges = edges.filter(
       (e) => e.type === "spouse" && (e.fromId === me || e.toId === me)
     );
+    
+    // Remove old spouse edges
     currentSpouseEdges.forEach((e) => {
       const other = e.fromId === me ? e.toId : e.fromId;
-      if (!desiredSpouse || other !== desiredSpouse) onRemoveEdge?.(e.id);
+      if (!desiredSpouse || other !== desiredSpouse) {
+        console.log('  ➖ Removing spouse edge:', other);
+        onRemoveEdge?.(e.id);
+      }
     });
+    
+    // Add new spouse edge
     if (desiredSpouse) {
       const exists = currentSpouseEdges.some((e) => {
         const other = e.fromId === me ? e.toId : e.fromId;
         return other === desiredSpouse;
       });
-      if (!exists)
+      if (!exists) {
+        console.log('  ➕ Adding spouse edge:', desiredSpouse);
         onAddEdge?.({ fromId: me, toId: desiredSpouse, type: "spouse" });
+      }
     }
-    toast({ title: "Relationships updated" });
+    
+    toast({ title: "Relationships updated", description: "Changes will be saved automatically" });
   }
 
   return (

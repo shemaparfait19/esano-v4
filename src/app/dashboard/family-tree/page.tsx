@@ -1340,14 +1340,30 @@ export default function FamilyTreePage() {
                   onDelete={(id) => removeMember(id)}
                   members={members as any}
                   edges={edges as any}
-                  onAddEdge={(e) =>
+                  onAddEdge={(e) => {
+                    console.log('➕ Adding edge via drawer:', e.type, 'from', e.fromId, 'to', e.toId);
                     addEdge({
                       fromId: e.fromId,
                       toId: e.toId,
                       type: e.type as any,
-                    })
-                  }
-                  onRemoveEdge={(edgeId) => removeEdge(edgeId)}
+                    });
+                    setDirty(true);
+                    // Auto-save after adding edge
+                    setTimeout(() => {
+                      console.log('💾 Auto-saving after edge addition...');
+                      saveFamilyTree();
+                    }, 500);
+                  }}
+                  onRemoveEdge={(edgeId) => {
+                    console.log('➖ Removing edge via drawer:', edgeId);
+                    removeEdge(edgeId);
+                    setDirty(true);
+                    // Auto-save after removing edge
+                    setTimeout(() => {
+                      console.log('💾 Auto-saving after edge removal...');
+                      saveFamilyTree();
+                    }, 500);
+                  }}
                 />
               </div>
 

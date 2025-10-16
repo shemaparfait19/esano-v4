@@ -123,19 +123,22 @@ export function MemberDetailDrawer({
       if (!res.ok) throw new Error(data.error || "Upload failed");
       toast({ title: "Uploaded" });
       // Update local draft so user sees the media immediately
+      let updatedMember: FamilyMember | null = null;
       setDraft((prev) => {
         if (!prev) return prev;
         if (kind === "voice") {
           const list = Array.isArray(prev.voiceUrls) ? prev.voiceUrls : [];
-          return { ...prev, voiceUrls: [...list, data.url] } as any;
+          updatedMember = { ...prev, voiceUrls: [...list, data.url] } as any;
+          return updatedMember;
         }
         if (kind === "document") {
           const list = Array.isArray(prev.documentUrls) ? prev.documentUrls : [];
-          return { ...prev, documentUrls: [...list, { url: data.url, name: file.name, uploadedAt: new Date().toISOString() }] } as any;
+          updatedMember = { ...prev, documentUrls: [...list, { url: data.url, name: file.name, uploadedAt: new Date().toISOString() }] } as any;
+          return updatedMember;
         }
         if (kind === "timeline") {
           const list = Array.isArray(prev.timeline) ? prev.timeline : [];
-          return {
+          updatedMember = {
             ...prev,
             timeline: [
               ...list,
@@ -151,10 +154,19 @@ export function MemberDetailDrawer({
               },
             ],
           } as any;
+          return updatedMember;
         }
         const list = Array.isArray(prev.mediaUrls) ? prev.mediaUrls : [];
-        return { ...prev, mediaUrls: [...list, data.url] } as any;
+        updatedMember = { ...prev, mediaUrls: [...list, data.url] } as any;
+        return updatedMember;
       });
+      
+      // Save the updated member to the tree immediately
+      if (updatedMember && onSave) {
+        setTimeout(() => {
+          onSave(updatedMember!);
+        }, 100);
+      }
     } catch (e: any) {
       toast({
         title: "Upload failed",

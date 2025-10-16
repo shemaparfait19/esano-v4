@@ -57,6 +57,11 @@ export async function POST(req: Request) {
     
     // Persist normalized text to user profile for fast matching
     try {
+      console.log(`[DNA Upload] Saving to users/${userId}:`, {
+        dnaDataLength: textSample.length,
+        fileName,
+      });
+      
       await adminDb.collection("users").doc(userId).set(
         {
           userId,
@@ -66,8 +71,11 @@ export async function POST(req: Request) {
         },
         { merge: true }
       );
+      
+      console.log(`[DNA Upload] Successfully saved to users/${userId}`);
     } catch (err) {
-      console.error("Failed to update user profile:", err);
+      console.error("[DNA Upload] Failed to update user profile:", err);
+      throw err; // Re-throw to notify client
     }
     
     return NextResponse.json({ ok: true, id: savedRef.id, ...doc });

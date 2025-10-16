@@ -119,21 +119,33 @@ export function DnaUploadForm() {
           throw new Error(data?.error || "Upload failed");
         }
         
+        console.log('[DNA Upload] File uploaded successfully, starting analysis...');
+        
         toast({ 
           title: "DNA file saved", 
           description: "Now analyzing your DNA..." 
         });
 
         // Step 2: Analyze DNA automatically
+        console.log('[DNA Upload] Calling analyzeDna with:', {
+          userId: user.uid,
+          textLength: fileText.length,
+          fileName: file.name
+        });
+        
         const analysisResult = await analyzeDna(user.uid, fileText, file.name);
         
+        console.log('[DNA Upload] Analysis result:', analysisResult);
+        
         if (analysisResult.error) {
+          console.error('[DNA Upload] Analysis error:', analysisResult.error);
           toast({
             title: "Analysis completed with warnings",
             description: analysisResult.error,
             variant: "default",
           });
         } else {
+          console.log('[DNA Upload] Analysis completed successfully');
           toast({
             title: "Analysis Complete!",
             description: "Your insights are ready. Check Insights, Relatives, and Ancestry pages.",
@@ -143,6 +155,7 @@ export function DnaUploadForm() {
         setAnalysisCompleted(true);
         
         // Refresh to load new analysis data
+        console.log('[DNA Upload] Reloading page in 1.5s...');
         setTimeout(() => {
           window.location.reload();
         }, 1500);

@@ -52,6 +52,9 @@ export async function analyzeDna(
   dnaData: string,
   fileName: string
 ) {
+  console.log('[analyzeDna] Starting analysis for user:', userId);
+  console.log('[analyzeDna] DNA data length:', dnaData?.length || 0);
+  
   const result: {
     relatives: Awaited<ReturnType<typeof analyzeDnaAndPredictRelatives>>;
     ancestry: any;
@@ -61,6 +64,7 @@ export async function analyzeDna(
 
   try {
     const safeDnaData = (dnaData || "").slice(0, 200_000);
+    console.log('[analyzeDna] Safe DNA data length:', safeDnaData.length);
 
     // Gather comparator DNA from other users (quota-safe)
     let otherUsersDnaData: string[] = [];
@@ -226,6 +230,13 @@ export async function analyzeDna(
 
     // Persist minimal analysis and the uploaded dna text (merge)
     try {
+      console.log('[analyzeDna] Preparing to save analysis to Firestore for user:', userId);
+      console.log('[analyzeDna] Analysis data:', {
+        relativesCount: result.relatives?.length || 0,
+        hasAncestry: !!result.ancestry,
+        hasInsights: !!result.insights,
+      });
+      
       const userProfile: Partial<UserProfile> = {
         userId,
         dnaData: (dnaData || "").slice(0, 200_000),
@@ -238,11 +249,16 @@ export async function analyzeDna(
         } as any,
         updatedAt: new Date().toISOString(),
       };
+      
+      console.log('[analyzeDna] Saving to users collection...');
       await adminDb
         .collection("users")
         .doc(userId)
         .set(userProfile, { merge: true });
+      
+      console.log('[analyzeDna] Successfully saved analysis to Firestore');
     } catch (e: any) {
+      console.error('[analyzeDna] Failed to save analysis to Firestore:', e);
       result.error = result.error || e?.message || "Failed to save analysis";
     }
 

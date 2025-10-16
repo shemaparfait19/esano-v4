@@ -107,6 +107,48 @@ export function MemberDetailDrawer({
 
   if (!draft) return null;
 
+  // Helper to handle document viewing/downloading
+  const handleDocumentClick = (doc: any) => {
+    const url = typeof doc === 'string' ? doc : doc.url;
+    const name = typeof doc === 'object' && doc.name ? doc.name : 'document';
+    
+    // If it's a data URL, convert to blob and download
+    if (url.startsWith('data:')) {
+      try {
+        // Extract base64 content
+        const [header, base64] = url.split(',');
+        const mimeMatch = header.match(/data:([^;]+)/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+        
+        // Convert base64 to blob
+        const byteString = atob(base64);
+        const arrayBuffer = new ArrayBuffer(byteString.length);
+        const uint8Array = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < byteString.length; i++) {
+          uint8Array[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([uint8Array], { type: mimeType });
+        
+        // Create blob URL and download
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        toast({
+          title: "Error",
+          description: "Failed to open document",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Regular URL - open in new tab
+      window.open(url, '_blank');
+    }
+  };
+
   async function upload(kind: "media" | "voice" | "timeline" | "document", file: File) {
     try {
       setUploading(true);
@@ -772,9 +814,12 @@ export function MemberDetailDrawer({
                       <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <a href={typeof doc === 'string' ? doc : doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      <button
+                        onClick={() => handleDocumentClick(doc)}
+                        className="text-blue-600 hover:underline text-left"
+                      >
                         {typeof doc === 'object' && doc.name ? doc.name : `Document ${i + 1}`}
-                      </a>
+                      </button>
                     </div>
                   ))}
                 </div>

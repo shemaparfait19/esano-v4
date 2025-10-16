@@ -457,10 +457,10 @@ export function NodeEditor({
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   {members
-                    .filter(m => m.id !== member?.id)
+                    .filter(m => m?.id && typeof m.fullName === 'string' && m.id !== member?.id)
                     .map((m) => (
                       <SelectItem key={m.id} value={m.id}>
-                        {m.fullName}
+                        {String(m.fullName)}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -485,10 +485,10 @@ export function NodeEditor({
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   {members
-                    .filter(m => m.id !== member?.id)
+                    .filter(m => m?.id && typeof m.fullName === 'string' && m.id !== member?.id)
                     .map((m) => (
                       <SelectItem key={m.id} value={m.id}>
-                        {m.fullName}
+                        {String(m.fullName)}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -543,7 +543,7 @@ export function NodeEditor({
           </div>
           {Array.isArray(member.mediaUrls) && member.mediaUrls.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-2">
-              {member.mediaUrls.map((url, idx) => (
+              {member.mediaUrls.filter(url => typeof url === 'string').map((url, idx) => (
                 <div key={idx} className="border rounded overflow-hidden">
                   {/* naive preview */}
                   {url.startsWith("data:image") ? (
@@ -587,7 +587,7 @@ export function NodeEditor({
           </div>
           {Array.isArray(member.voiceUrls) && member.voiceUrls.length > 0 && (
             <div className="mt-2 space-y-1">
-              {member.voiceUrls.map((url, i) => (
+              {member.voiceUrls.filter(url => typeof url === 'string').map((url, i) => (
                 <audio key={i} controls src={url} className="w-full" />
               ))}
             </div>
@@ -712,8 +712,9 @@ export function NodeEditor({
           {Array.isArray(member.timeline) && member.timeline.length > 0 && (
             <div className="mt-3 space-y-2 max-h-40 overflow-y-auto">
               {member.timeline
+                .filter(t => t && typeof t === 'object' && t.id && t.date)
                 .slice()
-                .sort((a, b) => a.date.localeCompare(b.date))
+                .sort((a, b) => String(a.date).localeCompare(String(b.date)))
                 .map((t) => (
                   <div
                     key={t.id}

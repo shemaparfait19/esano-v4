@@ -1397,18 +1397,10 @@ export default function FamilyTreePage() {
                       </div>
                     </div>
                     <div className="p-6">
-                      <NodeEditor
-                        nodeId={editingNode}
-                        onClose={() => setEditingNode(null)}
-                        onSave={(member) => {
-                          setEditingNode(null);
-                          setTimeout(saveFamilyTree, 500);
-                        }}
-                        onDelete={(nodeId) => {
-                          removeMember(nodeId);
-                          setTimeout(saveFamilyTree, 500);
-                        }}
-                      />
+                      {/* NodeEditor temporarily disabled - using MemberDetailDrawer instead */}
+                      <div className="text-center py-8 text-muted-foreground">
+                        Use the Edit button in the table to edit members
+                      </div>
                     </div>
                   </div>
                 </div>

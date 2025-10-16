@@ -39,10 +39,16 @@ export default function MemberProfilePage({
         const data = (await res.json()) as TreeResponse;
         if (!res.ok) throw new Error((data as any)?.error || "Failed to load");
         if (ignore) return;
-        const found =
-          (data.tree.members || []).find((m: any) => m.id === memberId) || null;
+        const allMembers = (data.tree.members || []) as any[];
+        const found = allMembers.find((m: any) => m.id === memberId) || null;
         setMember(found);
         setEdges((data.tree.edges || []) as any);
+        // Build name map for display
+        const map = new Map<string, string>();
+        allMembers.forEach((m: any) => {
+          map.set(m.id, m.fullName || m.firstName || m.id);
+        });
+        (window as any).__nameById = map; // debug/helper
       } catch (e: any) {
         if (!ignore) setError(e?.message || "Failed to load");
       } finally {
@@ -57,36 +63,36 @@ export default function MemberProfilePage({
 
   const parents = useMemo(() => {
     if (!member) return [] as string[];
-    return edges
+    const ids = edges
       .filter((e) => e.type === "parent" && e.toId === member.id)
       .map((e) => e.fromId);
+    return Array.from(new Set(ids));
   }, [edges, member]);
 
   const children = useMemo(() => {
     if (!member) return [] as string[];
-    return edges
+    const ids = edges
       .filter((e) => e.type === "parent" && e.fromId === member.id)
       .map((e) => e.toId);
+    return Array.from(new Set(ids));
   }, [edges, member]);
 
   const spouses = useMemo(() => {
     if (!member) return [] as string[];
-    return edges
+    const ids = edges
       .filter(
         (e) =>
           e.type === "spouse" &&
           (e.fromId === member.id || e.toId === member.id)
       )
       .map((e) => (e.fromId === member.id ? e.toId : e.fromId));
+    return Array.from(new Set(ids));
   }, [edges, member]);
 
-  // Map ids to names for display
-  const nameById = useMemo(() => {
-    const map = new Map<string, string>();
-    edges.forEach(() => {});
-    // We only have the selected member's relations, so show IDs for now if names aren't available
-    return map;
-  }, [edges]);
+  // helper to map id to display name
+  const toName = (id: string) =>
+    (typeof window !== "undefined" && (window as any).__nameById?.get(id)) ||
+    id;
 
   if (loading) {
     return (
@@ -164,9 +170,16 @@ export default function MemberProfilePage({
         <Card className="p-4">
           <div className="text-sm font-medium mb-2">Relationships</div>
           <div className="text-sm text-muted-foreground">
-            <div>Spouse: {spouses.length ? spouses.join(", ") : "—"}</div>
-            <div>Parents: {parents.length ? parents.join(", ") : "—"}</div>
-            <div>Children: {children.length ? children.join(", ") : "—"}</div>
+            <div>
+              Spouse: {spouses.length ? spouses.map(toName).join(", ") : "—"}
+            </div>
+            <div>
+              Parents: {parents.length ? parents.map(toName).join(", ") : "—"}
+            </div>
+            <div>
+              Children:{" "}
+              {children.length ? children.map(toName).join(", ") : "—"}
+            </div>
           </div>
         </Card>
 

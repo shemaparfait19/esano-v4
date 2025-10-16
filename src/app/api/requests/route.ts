@@ -23,13 +23,30 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { fromUserId, toUserId } = await req.json();
-    if (!fromUserId || !toUserId)
-      return NextResponse.json({ error: "Missing params" }, { status: 400 });
+    const body = await req.json();
+    console.log('[POST /api/requests] Request body:', body);
+    
+    const { fromUserId, toUserId } = body;
+    console.log('[POST /api/requests] fromUserId:', fromUserId, 'toUserId:', toUserId);
+    
+    if (!fromUserId || !toUserId) {
+      console.error('[POST /api/requests] Missing params - fromUserId:', fromUserId, 'toUserId:', toUserId);
+      return NextResponse.json({ 
+        error: "Missing params",
+        details: { fromUserId: !!fromUserId, toUserId: !!toUserId }
+      }, { status: 400 });
+    }
+    
+    console.log('[POST /api/requests] Calling sendConnectionRequest...');
     const res = await sendConnectionRequest(fromUserId, toUserId);
+    console.log('[POST /api/requests] Success:', res);
     return NextResponse.json(res);
-  } catch (e) {
-    return NextResponse.json({ error: "Failed to send" }, { status: 500 });
+  } catch (e: any) {
+    console.error('[POST /api/requests] Error:', e?.message || e);
+    return NextResponse.json({ 
+      error: "Failed to send",
+      details: e?.message 
+    }, { status: 500 });
   }
 }
 

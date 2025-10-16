@@ -275,6 +275,11 @@ export function DnaMatchFinder({ userId }: { userId: string }) {
                           return;
                         }
                         try {
+                          console.log('[Connect] Sending connection request:', {
+                            fromUserId: user.uid,
+                            toUserId: m.userId
+                          });
+                          
                           const res = await fetch("/api/requests", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -283,18 +288,26 @@ export function DnaMatchFinder({ userId }: { userId: string }) {
                               toUserId: m.userId,
                             }),
                           });
+                          
+                          const data = await res.json();
+                          console.log('[Connect] Response:', { status: res.status, data });
+                          
                           if (res.ok) {
                             toast({ title: "Request sent" });
                             updateStatuses([m.userId]);
                           } else {
+                            console.error('[Connect] Failed:', data);
                             toast({
                               title: "Failed to send request",
+                              description: data.error || 'Unknown error',
                               variant: "destructive",
                             });
                           }
-                        } catch {
+                        } catch (err: any) {
+                          console.error('[Connect] Error:', err);
                           toast({
                             title: "Failed to send request",
+                            description: err.message,
                             variant: "destructive",
                           });
                         }

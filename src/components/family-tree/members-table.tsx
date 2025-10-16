@@ -12,6 +12,7 @@ import {
   Eye,
   Edit,
   Sparkles,
+  Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { RelationshipInferenceEngine } from "@/lib/relationship-inference-engine";

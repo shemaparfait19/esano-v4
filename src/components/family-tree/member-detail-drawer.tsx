@@ -304,7 +304,7 @@ export function MemberDetailDrawer({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-3xl"
+        className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
         aria-describedby="member-detail-desc"
       >
         <DialogHeader>
@@ -314,6 +314,7 @@ export function MemberDetailDrawer({
           Edit personal details, upload memories and manage timeline for this
           family member.
         </p>
+        <div className="overflow-y-auto pr-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label>Full name</Label>
@@ -662,19 +663,30 @@ export function MemberDetailDrawer({
             </div>
             <div>
               <Label>Upload photo/video</Label>
+              <p className="text-xs text-muted-foreground mb-1">
+                Recommended: Keep files under 1MB for best performance. Max: 2MB
+              </p>
               <Input
                 type="file"
                 accept="image/*,video/*"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (!f) return;
+                  const sizeMB = f.size / 1024 / 1024;
                   if (f.size > 2 * 1024 * 1024) {
                     toast({
                       title: "File too large",
-                      description: "Max 2MB",
+                      description: `File is ${sizeMB.toFixed(2)}MB. Maximum is 2MB`,
                       variant: "destructive",
                     });
                     return;
+                  }
+                  if (sizeMB > 1) {
+                    toast({
+                      title: "Large file",
+                      description: `File is ${sizeMB.toFixed(2)}MB. Consider compressing for better performance.`,
+                      variant: "default",
+                    });
                   }
                   upload("media", f);
                 }}
@@ -683,6 +695,9 @@ export function MemberDetailDrawer({
             </div>
             <div>
               <Label>Upload voice</Label>
+              <p className="text-xs text-muted-foreground mb-1">
+                Recommended: Keep audio under 5MB. Max: 50MB
+              </p>
               <Input
                 type="file"
                 accept="audio/*"
@@ -690,13 +705,21 @@ export function MemberDetailDrawer({
                   const f = e.target.files?.[0];
                   if (!f) return;
                   const maxSize = 50 * 1024 * 1024; // 50MB
+                  const sizeMB = f.size / 1024 / 1024;
                   if (f.size > maxSize) {
                     toast({
                       title: "File too large",
-                      description: "Max size is 50MB",
+                      description: `File is ${sizeMB.toFixed(2)}MB. Maximum is 50MB`,
                       variant: "destructive",
                     });
                     return;
+                  }
+                  if (sizeMB > 5) {
+                    toast({
+                      title: "Large file",
+                      description: `File is ${sizeMB.toFixed(2)}MB. This may take time to upload.`,
+                      variant: "default",
+                    });
                   }
                   upload("voice", f);
                 }}
@@ -712,6 +735,9 @@ export function MemberDetailDrawer({
             </div>
             <div>
               <Label>Upload documents (PDF, Word, etc.)</Label>
+              <p className="text-xs text-muted-foreground mb-1">
+                Recommended: Keep documents under 5MB. Max: 50MB
+              </p>
               <Input
                 type="file"
                 accept=".pdf,.doc,.docx,.txt,.xlsx,.xls"
@@ -719,13 +745,21 @@ export function MemberDetailDrawer({
                   const f = e.target.files?.[0];
                   if (!f) return;
                   const maxSize = 50 * 1024 * 1024; // 50MB
+                  const sizeMB = f.size / 1024 / 1024;
                   if (f.size > maxSize) {
                     toast({
                       title: "File too large",
-                      description: "Max size is 50MB",
+                      description: `File is ${sizeMB.toFixed(2)}MB. Maximum is 50MB`,
                       variant: "destructive",
                     });
                     return;
+                  }
+                  if (sizeMB > 5) {
+                    toast({
+                      title: "Large file",
+                      description: `File is ${sizeMB.toFixed(2)}MB. This may take time to upload.`,
+                      variant: "default",
+                    });
                   }
                   upload("document", f);
                 }}
@@ -748,19 +782,30 @@ export function MemberDetailDrawer({
             </div>
             <div>
               <Label>Add timeline media</Label>
+              <p className="text-xs text-muted-foreground mb-1">
+                Recommended: Keep files under 1MB. Max: 2MB
+              </p>
               <Input
                 type="file"
                 accept="image/*,video/*,audio/*"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (!f) return;
+                  const sizeMB = f.size / 1024 / 1024;
                   if (f.size > 2 * 1024 * 1024) {
                     toast({
                       title: "File too large",
-                      description: "Max 2MB",
+                      description: `File is ${sizeMB.toFixed(2)}MB. Maximum is 2MB`,
                       variant: "destructive",
                     });
                     return;
+                  }
+                  if (sizeMB > 1) {
+                    toast({
+                      title: "Large file",
+                      description: `File is ${sizeMB.toFixed(2)}MB. Consider compressing.`,
+                      variant: "default",
+                    });
                   }
                   upload("timeline", f);
                 }}
@@ -796,6 +841,7 @@ export function MemberDetailDrawer({
               )}
             </div>
           </div>
+        </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -82,6 +82,9 @@ export function MemberDetailDrawer({
   }, [relationshipEngine, member]);
 
   React.useEffect(() => {
+    console.log('🔄 Member changed:', member?.id, member?.fullName);
+    console.log('📦 Full member object:', JSON.stringify(member, null, 2));
+    console.log('📍 Member location property:', member?.location);
     setDraft(member);
     if (!member) return;
     

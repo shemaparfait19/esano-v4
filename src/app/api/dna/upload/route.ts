@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { adminDb, adminStorage } from "@/lib/firebase-admin";
+import { adminDb } from "@/lib/firebase-admin";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
+import { existsSync } from "fs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,30 +38,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // Upload to Firebase Storage (local storage)
+    // Save to local file system
     const fileName = file.name || `dna_${Date.now()}.txt`;
-    const storagePath = `dna/${userId}/${fileName}`;
+    const uploadDir = join(process.cwd(), "uploads", "dna", userId);
     
-    // Upload file to Firebase Storage
-    const bucket = adminStorage.bucket();
-    const storageFile = bucket.file(storagePath);
+    // Create directory if it doesn't exist
+    if (!existsSync(uploadDir)) {
+      await mkdir(uploadDir, { recursive: true });
+    }
     
-    await storageFile.save(buf, {
-      contentType: file.type || "text/plain",
-      metadata: {
-        contentType: file.type || "text/plain",
-        metadata: {
-          userId,
-          uploadDate: new Date().toISOString(),
-        },
-      },
-    });
-
-    // Generate signed URL for access (valid for 50 years)
-    const [fileUrl] = await storageFile.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 50 * 365 * 24 * 60 * 60 * 1000, // 50 years
-    });
+    const filePath = join(uploadDir, fileName);
+    await writeFile(filePath, buf);
+    
+    // Create accessible URL path
+    const fileUrl = `/uploads/dna/${userId}/${fileName}`;
+    const storagePath = `uploads/dna/${userId}/${fileName}`;
 
     // Extract text sample for matching
     const textSample = buf.toString("utf8").slice(0, 1_000_000);
@@ -72,7 +66,7 @@ export async function POST(req: Request) {
       uploadDate: new Date().toISOString(),
       fileSize: buf.byteLength,
       status: "active" as const,
-      backend: "firebase_storage" as const,
+      backend: "local_storage" as const,
       textSample,
     };
     

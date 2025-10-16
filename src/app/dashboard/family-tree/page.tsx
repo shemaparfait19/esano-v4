@@ -897,8 +897,8 @@ export default function FamilyTreePage() {
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-muted">
                       Shared from {ownerName || "Owner"}
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 <div className="flex-1" />
 

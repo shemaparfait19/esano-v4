@@ -10,6 +10,7 @@ import { MembersTable } from "@/components/family-tree/members-table";
 import { MemberDetailDrawer } from "@/components/family-tree/member-detail-drawer";
 import { TreeToolbar } from "@/components/family-tree/tree-toolbar";
 import { NodeEditor } from "@/components/family-tree/node-editor";
+import { RelationshipsTable } from "@/components/family-tree/relationships-table";
 import { FamilyMember, FamilyEdge } from "@/types/family-tree";
 import { Button } from "@/components/ui/button";
 import {
@@ -1324,6 +1325,24 @@ export default function FamilyTreePage() {
                   onAiSuggest={handleAISuggestions}
                   ownerId={ownerIdParam || user?.uid}
                 />
+                
+                {/* Relationships Table */}
+                <div className="mt-6">
+                  <RelationshipsTable
+                    members={members as any}
+                    edges={edges as any}
+                    onRemoveEdge={(edgeId) => {
+                      console.log('➖ Removing edge from relationships table:', edgeId);
+                      removeEdge(edgeId);
+                      setDirty(true);
+                      setTimeout(() => {
+                        console.log('💾 Auto-saving after edge removal...');
+                        saveFamilyTree();
+                      }, 500);
+                    }}
+                    readonly={readonly}
+                  />
+                </div>
                 <MemberDetailDrawer
                   open={!!editingNode}
                   onOpenChange={(o) => !o && setEditingNode(null)}

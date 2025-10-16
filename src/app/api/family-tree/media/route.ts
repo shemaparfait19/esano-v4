@@ -51,45 +51,30 @@ export async function POST(request: Request) {
     const extension = file.name.split('.').pop() || 'bin';
     const filename = `${folder}/${userId}/${memberId}/${timestamp}_${randomStr}.${extension}`;
     
-    // Upload to Firebase Storage
-    console.log('📤 Uploading to Firebase Storage...');
+    // Convert to base64 (fallback to previous working method)
+    console.log('🔄 Converting to base64...');
     const buffer = Buffer.from(arrayBuffer);
-    const bucket = adminStorage.bucket();
-    const fileRef = bucket.file(filename);
+    const base64Content = buffer.toString('base64');
+    const fileUrl = `data:${file.type};base64,${base64Content}`;
+    console.log('✅ Created data URL');
     
-    await fileRef.save(buffer, {
-      metadata: {
-        contentType: file.type,
-        metadata: {
-          userId,
-          memberId,
-          kind,
-          originalName: file.name,
-          uploadedAt: new Date().toISOString(),
-        },
-      },
-    });
-    
-    // Make file publicly accessible
-    await fileRef.makePublic();
-    
-    // Get public URL
-    const fileUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
-    console.log('✅ File uploaded to Storage:', fileUrl);
-    
-    // Store metadata in Firestore (without the large file content)
+    // Store metadata in Firestore
     console.log('💾 Saving metadata to Firestore...');
-    await adminDb.collection("uploadedDocuments").add({
-      userId,
-      memberId,
-      fileName: file.name,
-      storedFileName: filename,
-      fileType: file.type,
-      fileSize: file.size,
-      kind,
-      url: fileUrl,
-      uploadedAt: new Date().toISOString(),
-    });
+    try {
+      await adminDb.collection("uploadedDocuments").add({
+        userId,
+        memberId,
+        fileName: file.name,
+        storedFileName: filename,
+        fileType: file.type,
+        fileSize: file.size,
+        kind,
+        uploadedAt: new Date().toISOString(),
+      });
+      console.log('✅ Metadata saved');
+    } catch (metaErr: any) {
+      console.warn('⚠️ Failed to save metadata:', metaErr.message);
+    }
 
     const ref = adminDb.collection("familyTrees").doc(userId);
     const snap = await ref.get();

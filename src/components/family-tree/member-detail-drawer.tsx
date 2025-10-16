@@ -59,6 +59,8 @@ export function MemberDetailDrawer({
   const [relSpouse, setRelSpouse] = useState<string | "">("");
   const [relParent1, setRelParent1] = useState<string | "">("");
   const [relParent2, setRelParent2] = useState<string | "">("");
+  const [relChildren, setRelChildren] = useState<string[]>([]);
+  const [relSiblings, setRelSiblings] = useState<string[]>([]);
   const [relExtraType, setRelExtraType] = useState<FamilyEdge["type"] | "">("");
   const [relExtraTarget, setRelExtraTarget] = useState<string | "">("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -81,20 +83,25 @@ export function MemberDetailDrawer({
   React.useEffect(() => {
     setDraft(member);
     if (!member) return;
-    const curSpouses = edges
-      .filter(
-        (e) =>
-          e.type === "spouse" &&
-          (e.fromId === member.id || e.toId === member.id)
-      )
-      .map((e) => (e.fromId === member.id ? e.toId : e.fromId));
-    setRelSpouse(curSpouses[0] || "");
-    const curParents = edges
-      .filter((e) => e.type === "parent" && e.toId === member.id)
-      .map((e) => e.fromId)
-      .slice(0, 2);
-    setRelParent1(curParents[0] || "");
-    setRelParent2(curParents[1] || "");
+    
+    // Initialize relationships from edges
+    const parents = edges.filter(e => e.type === "parent" && e.toId === member.id).map(e => e.fromId);
+    setRelParent1(parents[0] || "");
+    setRelParent2(parents[1] || "");
+    
+    const spouse = edges.find(e => e.type === "spouse" && (e.fromId === member.id || e.toId === member.id));
+    if (spouse) {
+      setRelSpouse(spouse.fromId === member.id ? spouse.toId : spouse.fromId);
+    } else {
+      setRelSpouse("");
+    }
+    
+    const children = edges.filter(e => e.type === "parent" && e.fromId === member.id).map(e => e.toId);
+    setRelChildren(children);
+    
+    const siblings = edges.filter(e => e.type === "sibling" && (e.fromId === member.id || e.toId === member.id))
+      .map(e => e.fromId === member.id ? e.toId : e.fromId);
+    setRelSiblings(siblings);
   }, [member, edges]);
 
   if (!draft) return null;
@@ -201,12 +208,12 @@ export function MemberDetailDrawer({
       }
     });
 
+    // Handle spouse
     const desiredSpouse = relSpouse || "";
     const currentSpouseEdges = edges.filter(
       (e) => e.type === "spouse" && (e.fromId === me || e.toId === me)
     );
     
-    // Remove old spouse edges
     currentSpouseEdges.forEach((e) => {
       const other = e.fromId === me ? e.toId : e.fromId;
       if (!desiredSpouse || other !== desiredSpouse) {
@@ -215,7 +222,6 @@ export function MemberDetailDrawer({
       }
     });
     
-    // Add new spouse edge
     if (desiredSpouse) {
       const exists = currentSpouseEdges.some((e) => {
         const other = e.fromId === me ? e.toId : e.fromId;
@@ -226,6 +232,48 @@ export function MemberDetailDrawer({
         onAddEdge?.({ fromId: me, toId: desiredSpouse, type: "spouse" });
       }
     }
+    
+    // Handle children
+    const currentChildEdges = edges.filter((e) => e.type === "parent" && e.fromId === me);
+    
+    currentChildEdges.forEach((e) => {
+      if (!relChildren.includes(e.toId)) {
+        console.log('  ➖ Removing child edge:', e.toId);
+        onRemoveEdge?.(e.id);
+      }
+    });
+    
+    relChildren.forEach((childId) => {
+      const exists = currentChildEdges.some((e) => e.toId === childId);
+      if (!exists) {
+        console.log('  ➕ Adding child edge:', childId);
+        onAddEdge?.({ fromId: me, toId: childId, type: "parent" });
+      }
+    });
+    
+    // Handle siblings
+    const currentSiblingEdges = edges.filter(
+      (e) => e.type === "sibling" && (e.fromId === me || e.toId === me)
+    );
+    
+    currentSiblingEdges.forEach((e) => {
+      const other = e.fromId === me ? e.toId : e.fromId;
+      if (!relSiblings.includes(other)) {
+        console.log('  ➖ Removing sibling edge:', other);
+        onRemoveEdge?.(e.id);
+      }
+    });
+    
+    relSiblings.forEach((siblingId) => {
+      const exists = currentSiblingEdges.some((e) => {
+        const other = e.fromId === me ? e.toId : e.fromId;
+        return other === siblingId;
+      });
+      if (!exists) {
+        console.log('  ➕ Adding sibling edge:', siblingId);
+        onAddEdge?.({ fromId: me, toId: siblingId, type: "sibling" });
+      }
+    });
     
     toast({ title: "Relationships updated", description: "Changes will be saved automatically" });
   }
@@ -459,6 +507,72 @@ export function MemberDetailDrawer({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Children (multi-select)</Label>
+                  <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
+                    {members
+                      .filter(m => m?.id && typeof m.fullName === 'string' && m.id !== draft?.id)
+                      .map((m) => {
+                        const isSelected = relChildren.includes(m.id);
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              if (readonly) return;
+                              setRelChildren(prev => 
+                                isSelected 
+                                  ? prev.filter(id => id !== m.id)
+                                  : [...prev, m.id]
+                              );
+                            }}
+                            disabled={readonly}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                              isSelected
+                                ? "bg-blue-500 text-white"
+                                : "bg-muted hover:bg-muted/80"
+                            }`}
+                          >
+                            {m.fullName}
+                          </button>
+                        );
+                      })}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Click to select/deselect children</p>
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Siblings (multi-select)</Label>
+                  <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
+                    {members
+                      .filter(m => m?.id && typeof m.fullName === 'string' && m.id !== draft?.id)
+                      .map((m) => {
+                        const isSelected = relSiblings.includes(m.id);
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              if (readonly) return;
+                              setRelSiblings(prev => 
+                                isSelected 
+                                  ? prev.filter(id => id !== m.id)
+                                  : [...prev, m.id]
+                              );
+                            }}
+                            disabled={readonly}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                              isSelected
+                                ? "bg-purple-500 text-white"
+                                : "bg-muted hover:bg-muted/80"
+                            }`}
+                          >
+                            {m.fullName}
+                          </button>
+                        );
+                      })}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Click to select/deselect siblings</p>
                 </div>
                 <div>
                   <Label>Extra relation (optional)</Label>

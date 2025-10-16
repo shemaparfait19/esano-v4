@@ -29,6 +29,7 @@ interface GenerationFormProps {
 type FamilyMemberForm = Partial<FamilyMember> & {
   spouseId?: string;
   parentIds?: string[];
+  siblingIds?: string[];
   role?: string;
 };
 
@@ -50,6 +51,7 @@ export function GenerationForm({
       email: undefined,
       spouseId: undefined,
       parentIds: [],
+      siblingIds: [],
       role: undefined,
     },
   ]);
@@ -104,7 +106,7 @@ export function GenerationForm({
     const edges: Array<{
       fromId: string;
       toId: string;
-      type: "parent" | "spouse";
+      type: "parent" | "spouse" | "sibling";
     }> = [];
 
     rows.forEach((r, idx) => {
@@ -119,6 +121,12 @@ export function GenerationForm({
 
       if (r.spouseId) {
         edges.push({ fromId: createdId, toId: r.spouseId, type: "spouse" });
+      }
+
+      if (Array.isArray(r.siblingIds)) {
+        r.siblingIds.forEach((sid) => {
+          if (sid) edges.push({ fromId: createdId, toId: sid, type: "sibling" });
+        });
       }
     });
 
@@ -390,6 +398,49 @@ export function GenerationForm({
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+                  <Label className="text-sm">Siblings (same generation members)</Label>
+                  <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
+                    {members
+                      .filter(m => m.generation === generation && m.id !== rows[idx]?.id)
+                      .map((m) => {
+                        const isSelected = rows[idx]?.siblingIds?.includes(m.id);
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              if (readonly) return;
+                              setRows((r) =>
+                                r.map((it, i) =>
+                                  i === idx
+                                    ? {
+                                        ...it,
+                                        siblingIds: isSelected
+                                          ? (it.siblingIds || []).filter(sid => sid !== m.id)
+                                          : [...(it.siblingIds || []), m.id],
+                                      }
+                                    : it
+                                )
+                              );
+                            }}
+                            disabled={readonly}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted hover:bg-muted/80"
+                            }`}
+                          >
+                            {m.fullName}
+                          </button>
+                        );
+                      })}
+                    {members.filter(m => m.generation === generation).length === 0 && (
+                      <span className="text-xs text-muted-foreground">No members in generation {generation} yet</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Click to select/deselect siblings</p>
                 </div>
               </div>
             </div>

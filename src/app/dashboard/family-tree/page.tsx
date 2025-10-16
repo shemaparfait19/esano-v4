@@ -502,6 +502,44 @@ export default function FamilyTreePage() {
         console.log('📊 After cleanup - Members:', data.tree.members.length, 'Edges:', data.tree.edges.length);
       }
 
+      // Initialize tree with current user as first member if empty
+      if (!ownerIdParam && data.tree.members.length === 0 && user) {
+        try {
+          const { getDoc, doc } = await import("firebase/firestore");
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          const userData = userDoc.exists() ? (userDoc.data() as any) : null;
+          
+          const firstMember: FamilyMember = {
+            id: `member_${Date.now()}`,
+            fullName: userData?.fullName || userData?.displayName || user.displayName || "Me",
+            firstName: userData?.firstName || user.displayName?.split(' ')[0] || "Me",
+            lastName: userData?.lastName || user.displayName?.split(' ').slice(1).join(' ') || "",
+            gender: userData?.gender || "unknown",
+            birthDate: userData?.birthDate || "",
+            tags: ["me"],
+            customFields: {},
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          
+          data.tree.members = [firstMember];
+          
+          // Auto-save the initialized tree
+          await fetch("/api/family-tree", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user.uid, tree: data.tree }),
+          });
+          
+          toast({
+            title: "Welcome to your family tree!",
+            description: "We've added you as the first member. Start adding your family!",
+          });
+        } catch (err) {
+          console.error("Failed to initialize tree with user:", err);
+        }
+      }
+
       setTree(data.tree);
 
       if (ownerIdParam && user?.uid) {

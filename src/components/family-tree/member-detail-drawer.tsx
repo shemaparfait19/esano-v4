@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { RelationshipInferenceEngine } from "@/lib/relationship-inference-engine";
+import { Sparkles, Info } from "lucide-react";
 
 interface MemberDetailDrawerProps {
   open: boolean;
@@ -59,6 +61,19 @@ export function MemberDetailDrawer({
   const [relParent2, setRelParent2] = useState<string | "">("");
   const [relExtraType, setRelExtraType] = useState<FamilyEdge["type"] | "">("");
   const [relExtraTarget, setRelExtraTarget] = useState<string | "">("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Initialize relationship inference engine
+  const relationshipEngine = useMemo(() => {
+    if (members.length === 0 || !member) return null;
+    return new RelationshipInferenceEngine(members, edges);
+  }, [members, edges, member]);
+
+  // Get all inferred relationships for this member
+  const inferredRelationships = useMemo(() => {
+    if (!relationshipEngine || !member) return [];
+    return relationshipEngine.getAllRelationshipsFor(member.id);
+  }, [relationshipEngine, member]);
 
   React.useEffect(() => {
     setDraft(member);
@@ -314,13 +329,53 @@ export function MemberDetailDrawer({
           </div>
 
           <div className="space-y-3">
-            {/* Relationship Manager */}
+            {/* AI-Powered Relationship Manager */}
             <div className="space-y-2">
-              <Label className="font-medium">Relationships</Label>
+              <div className="flex items-center justify-between">
+                <Label className="font-medium flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  AI-Powered Relationships
+                </Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSuggestions(!showSuggestions)}
+                  className="text-xs"
+                >
+                  <Info className="w-3 h-3 mr-1" />
+                  {showSuggestions ? "Hide" : "Show"} Detected
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
-                Parent = links selected parent to this person. Spouse =
-                marriage/partner. Extra relation = sibling/cousin/relative.
+                Select direct relationships. AI will automatically detect extended family (grandparents, aunts, uncles, cousins, etc.)
               </p>
+              
+              {/* Show AI-detected relationships */}
+              {showSuggestions && inferredRelationships.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-800">
+                    <Sparkles className="w-3 h-3" />
+                    AI-Detected Relationships ({inferredRelationships.length})
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                    {inferredRelationships.slice(0, 20).map((rel) => {
+                      const relMember = members.find(m => m.id === rel.toId);
+                      if (!relMember) return null;
+                      return (
+                        <div key={rel.toId} className="text-xs bg-white rounded px-2 py-1 border border-amber-100">
+                          <span className="font-medium">{relMember.fullName}</span>
+                          <span className="text-amber-700 ml-1">({rel.description})</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {inferredRelationships.length > 20 && (
+                    <p className="text-xs text-amber-600">
+                      +{inferredRelationships.length - 20} more relationships detected
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label>Parent 1</Label>
@@ -377,7 +432,7 @@ export function MemberDetailDrawer({
                   </Select>
                 </div>
                 <div>
-                  <Label>Extra relation</Label>
+                  <Label>Extra relation (optional)</Label>
                   <Select
                     value={(relExtraType as any) || ""}
                     onValueChange={(v) => setRelExtraType(v as any)}
@@ -386,21 +441,33 @@ export function MemberDetailDrawer({
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="parent">Parent</SelectItem>
+                      <SelectItem value="child">Child</SelectItem>
+                      <SelectItem value="grandparent">Grandparent</SelectItem>
+                      <SelectItem value="grandchild">Grandchild</SelectItem>
+                      <SelectItem value="great_grandparent">Great-Grandparent</SelectItem>
+                      <SelectItem value="great_grandchild">Great-Grandchild</SelectItem>
+                      <SelectItem value="sibling">Sibling</SelectItem>
                       <SelectItem value="big_brother">Big Brother</SelectItem>
-                      <SelectItem value="little_brother">
-                        Little Brother
-                      </SelectItem>
+                      <SelectItem value="little_brother">Little Brother</SelectItem>
                       <SelectItem value="big_sister">Big Sister</SelectItem>
-                      <SelectItem value="little_sister">
-                        Little Sister
-                      </SelectItem>
+                      <SelectItem value="little_sister">Little Sister</SelectItem>
+                      <SelectItem value="half_sibling">Half-Sibling</SelectItem>
                       <SelectItem value="aunt">Aunt</SelectItem>
                       <SelectItem value="uncle">Uncle</SelectItem>
+                      <SelectItem value="niece">Niece</SelectItem>
+                      <SelectItem value="nephew">Nephew</SelectItem>
+                      <SelectItem value="cousin">Cousin</SelectItem>
                       <SelectItem value="cousin_big">Cousin (Older)</SelectItem>
-                      <SelectItem value="cousin_little">
-                        Cousin (Younger)
-                      </SelectItem>
+                      <SelectItem value="cousin_little">Cousin (Younger)</SelectItem>
+                      <SelectItem value="second_cousin">Second Cousin</SelectItem>
+                      <SelectItem value="in_law">In-Law</SelectItem>
+                      <SelectItem value="step_parent">Step-Parent</SelectItem>
+                      <SelectItem value="step_child">Step-Child</SelectItem>
+                      <SelectItem value="step_sibling">Step-Sibling</SelectItem>
                       <SelectItem value="guardian">Guardian</SelectItem>
+                      <SelectItem value="godparent">Godparent</SelectItem>
+                      <SelectItem value="godchild">Godchild</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>

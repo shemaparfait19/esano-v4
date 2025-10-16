@@ -40,7 +40,9 @@ export async function POST(req: Request) {
     const storagePath = `dna/${userId}/${fileName}`;
     
     // Upload file to Firebase Storage
-    const storageFile = adminStorage.bucket().file(storagePath);
+    const bucket = adminStorage.bucket();
+    const storageFile = bucket.file(storagePath);
+    
     await storageFile.save(buf, {
       contentType: file.type || "text/plain",
       metadata: {
@@ -52,9 +54,11 @@ export async function POST(req: Request) {
       },
     });
 
-    // Make file publicly accessible (optional - adjust based on your security needs)
-    await storageFile.makePublic();
-    const fileUrl = `https://storage.googleapis.com/${adminStorage.bucket().name}/${storagePath}`;
+    // Generate signed URL for access (valid for 50 years)
+    const [fileUrl] = await storageFile.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 50 * 365 * 24 * 60 * 60 * 1000, // 50 years
+    });
 
     // Extract text sample for matching
     const textSample = buf.toString("utf8").slice(0, 1_000_000);

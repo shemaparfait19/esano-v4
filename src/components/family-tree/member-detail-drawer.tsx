@@ -337,48 +337,12 @@ export function MemberDetailDrawer({
               <div className="flex items-center justify-between">
                 <Label className="font-medium flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-500" />
-                  AI-Powered Relationships
+                  Relationships
                 </Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowSuggestions(!showSuggestions)}
-                  className="text-xs"
-                >
-                  <Info className="w-3 h-3 mr-1" />
-                  {showSuggestions ? "Hide" : "Show"} Detected
-                </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Select direct relationships. AI will automatically detect extended family (grandparents, aunts, uncles, cousins, etc.)
+                Select parents and spouse. The system will automatically infer extended family relationships.
               </p>
-              
-              {/* Show AI-detected relationships */}
-              {showSuggestions && inferredRelationships.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-800">
-                    <Sparkles className="w-3 h-3" />
-                    AI-Detected Relationships ({inferredRelationships.length})
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                    {inferredRelationships.slice(0, 20).map((rel) => {
-                      const relMember = members.find(m => m.id === rel.toId);
-                      if (!relMember) return null;
-                      return (
-                        <div key={rel.toId} className="text-xs bg-white rounded px-2 py-1 border border-amber-100">
-                          <span className="font-medium">{relMember.fullName}</span>
-                          <span className="text-amber-700 ml-1">({rel.description})</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {inferredRelationships.length > 20 && (
-                    <p className="text-xs text-amber-600">
-                      +{inferredRelationships.length - 20} more relationships detected
-                    </p>
-                  )}
-                </div>
-              )}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label>Parent 1</Label>

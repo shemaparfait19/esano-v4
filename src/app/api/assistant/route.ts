@@ -43,13 +43,24 @@ async function buildComprehensiveFamilyContext(userId: string) {
     const facts: string[] = [];
     const relationships: string[] = [];
 
-    // Helper to format person info
-    const formatPerson = (id: string) => {
+    // Helper to format person info with comprehensive details
+    const formatPerson = (id: string, includeDetails: boolean = false) => {
       const m = members[id];
       if (!m) return null;
       let info = m.fullName || m.firstName || "Unknown";
       if (m.birthDate) info += ` (born ${m.birthDate})`;
+      if (m.deathDate) info += ` - ${m.deathDate}`;
       if (m.birthPlace) info += ` from ${m.birthPlace}`;
+      if (includeDetails) {
+        if (m.occupation) info += ` | Occupation: ${m.occupation}`;
+        if (m.gender) info += ` | Gender: ${m.gender}`;
+        if (m.location) {
+          const loc = typeof m.location === 'object' ? 
+            [m.location.village, m.location.cell, m.location.sector, m.location.district, m.location.province].filter(Boolean).join(', ') :
+            m.location;
+          if (loc) info += ` | Location: ${loc}`;
+        }
+      }
       return info;
     };
 
@@ -149,12 +160,49 @@ async function buildComprehensiveFamilyContext(userId: string) {
       });
     });
 
-    // Get all family members for comprehensive list
+    // Cousins (children of aunts/uncles)
+    const cousins = new Set<string>();
+    myParents.forEach((pid) => {
+      const grandparents = parentsOf.get(pid) || [];
+      grandparents.forEach((gpid) => {
+        (childrenOf.get(gpid) || []).forEach((auid) => {
+          if (auid !== pid) {
+            (childrenOf.get(auid) || []).forEach((cousinId) => {
+              cousins.add(cousinId);
+            });
+          }
+        });
+      });
+    });
+    cousins.forEach((cid) => {
+      const info = formatPerson(cid);
+      if (info) {
+        facts.push(`${info} is my cousin`);
+        relationships.push(`cousin: ${info}`);
+      }
+    });
+
+    // Nieces/Nephews (children of siblings)
+    siblings.forEach((sid) => {
+      (childrenOf.get(sid) || []).forEach((nid) => {
+        const info = formatPerson(nid);
+        if (info) {
+          facts.push(`${info} is my niece/nephew`);
+          relationships.push(`niece/nephew: ${info}`);
+        }
+      });
+    });
+
+    // Get all family members for comprehensive list with details
     const allMembers = Object.values(members).map((m: any) => {
       let desc = m.fullName || m.firstName || "Unknown";
       if (m.birthDate) desc += ` (b. ${m.birthDate})`;
       if (m.deathDate) desc += ` (d. ${m.deathDate})`;
       if (m.birthPlace) desc += ` - ${m.birthPlace}`;
+      if (m.occupation) desc += ` | ${m.occupation}`;
+      if (m.education && Array.isArray(m.education) && m.education.length > 0) {
+        desc += ` | Education: ${m.education.map((e: any) => e.institution || e.degree).filter(Boolean).join(', ')}`;
+      }
       return desc;
     });
 
@@ -542,9 +590,27 @@ export async function POST(req: Request) {
     // Build final prompt
     const contextString =
       contextParts.length > 0 ? contextParts.join("\n\n") : "";
+    // Enhanced system prompt for genealogy assistant
+    const systemPrompt = `You are an expert genealogy and family history assistant with deep knowledge of:
+- Family relationships and kinship terminology (parents, siblings, cousins, in-laws, etc.)
+- Genealogical research methods and best practices
+- Rwandan family structures, clans, and cultural traditions
+- DNA analysis and genetic relationships
+- Historical record interpretation
+
+When answering questions:
+1. Be precise about relationships (use exact terms like "paternal grandmother" not just "grandmother")
+2. Reference specific dates, places, and names from the family tree
+3. If asked about someone not in the tree, clearly state they are not found
+4. Provide context about Rwandan cultural practices when relevant
+5. Suggest genealogy research tips when appropriate
+6. Be respectful and sensitive about family matters
+
+Important: Base your answers ONLY on the data provided. Do not make assumptions or invent information.`;
+
     const fullPrompt = contextString
-      ? `${contextString}\n\n---\n\nUser Question: ${query}\n\nPlease answer based on the context provided above. If the answer isn't in the context, say so clearly.`
-      : `User Question: ${query}`;
+      ? `${systemPrompt}\n\n${contextString}\n\n---\n\nUser Question: ${query}\n\nAnswer:`
+      : `${systemPrompt}\n\nUser Question: ${query}\n\nAnswer:`;
 
     console.log(
       `[Prompt] Final prompt length: ${fullPrompt.length} characters`

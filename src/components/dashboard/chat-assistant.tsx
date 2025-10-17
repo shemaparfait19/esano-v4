@@ -213,18 +213,21 @@ export function ChatAssistant() {
                 <Logo className="h-12 w-12 mx-auto text-primary" />
               </div>
               <h3 className="text-lg font-semibold mb-2">
-                Ask about your family tree
+                Family Tree & Counseling Assistant
               </h3>
               <p className="text-sm mb-4">
-                I have access to your complete family tree data, relationships,
-                and history
+                I have access to your family tree data and can provide genealogy help
+                or family counseling support
               </p>
               <div className="text-xs space-y-1 text-left bg-muted/50 p-3 rounded-lg">
-                <p className="font-medium mb-1">Try asking:</p>
+                <p className="font-medium mb-1">Genealogy questions:</p>
                 <p>• "Tell me about my grandparents"</p>
-                <p>• "Who are all my siblings?"</p>
+                <p>• "Who are all my cousins?"</p>
                 <p>• "List everyone in my family tree"</p>
-                <p>• "What do you know about my family?"</p>
+                <p className="font-medium mb-1 mt-2">Family counseling:</p>
+                <p>• "How do I resolve conflicts with siblings?"</p>
+                <p>• "Tips for better parent-child communication"</p>
+                <p>• "Dealing with family grief and loss"</p>
               </div>
             </div>
           )}

@@ -602,7 +602,9 @@ export default function FamilyTreePage() {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load family tree";
+      console.error('[Family Tree] Load error:', err);
       setError(errorMessage);
+      setTree(null); // Clear tree to ensure error message displays
       toast({
         title: "Error",
         description: errorMessage,
@@ -906,25 +908,40 @@ export default function FamilyTreePage() {
     }
   };
 
-  if (isLoading && !tree) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading family tree...</p>
+          <div className="text-lg font-medium text-muted-foreground">
+            Loading family tree...
+          </div>
         </div>
       </div>
     );
   }
 
-  if (error && !tree) {
+  if (error) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Card className="w-96">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-destructive mb-4">{error}</p>
-              <Button onClick={loadFamilyTree}>Retry</Button>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8">
+            <div className="text-center space-y-4">
+              <div className="text-red-600 font-semibold text-lg">⚠️ Error Loading Family Tree</div>
+              <div className="text-sm text-muted-foreground">{error}</div>
+              {ownerIdParam && (
+                <div className="text-xs text-muted-foreground bg-yellow-50 p-3 rounded">
+                  <strong>Note:</strong> You may not have access to this family tree, or it may have been unshared.
+                </div>
+              )}
+              <div className="flex gap-2 justify-center">
+                <Button onClick={() => {
+                  setError(null);
+                  loadFamilyTree();
+                }}>Try Again</Button>
+                <Button variant="outline" onClick={() => window.location.href = '/dashboard/family-tree'}>
+                  Go to My Tree
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

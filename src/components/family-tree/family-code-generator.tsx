@@ -205,7 +205,7 @@ export function FamilyCodeGenerator({
           </Label>
           <Input
             id="familyName"
-            placeholder="e.g., Smith Family"
+            placeholder="e.g., MUTARA"
             value={familyName}
             onChange={(e) => setFamilyName(e.target.value)}
             onKeyPress={handleKeyPress}

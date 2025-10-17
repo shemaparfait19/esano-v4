@@ -14,6 +14,7 @@ import {
   UserCheck,
   AlertCircle,
   BookOpen,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,6 +23,7 @@ const adminNavItems = [
   { href: "/admin/dashboard", icon: BarChart3, label: "Dashboard" },
   { href: "/admin/applications", icon: FileText, label: "Applications" },
   { href: "/admin/users", icon: Users, label: "Users" },
+  { href: "/admin/feedback", icon: MessageSquare, label: "Feedback" },
   { href: "/admin/logs", icon: AlertCircle, label: "Activity Logs" },
   { href: "/admin/settings", icon: Settings, label: "Settings" },
   { href: "/admin/counseling", icon: BookOpen, label: "Counseling" },

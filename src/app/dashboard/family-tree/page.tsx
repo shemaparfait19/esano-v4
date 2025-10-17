@@ -1024,8 +1024,8 @@ export default function FamilyTreePage() {
             </div>
           )}
 
-          {/* Tree viewport for approved users only */}
-          {userProfile?.familyTreeApproved && !searchParam && (
+          {/* Tree viewport: for approved users OR when viewing shared trees */}
+          {(userProfile?.familyTreeApproved || ownerIdParam) && !searchParam && (
           <>
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             <div className="flex-1 relative" id="tree-viewport">

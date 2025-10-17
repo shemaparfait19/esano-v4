@@ -9,7 +9,7 @@ import type { FamilyTree, FamilyEdge as AppEdge } from "@/types/family-tree";
 import type { FamilyMember as AppMember } from "@/types/family-tree";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, BookOpen, Home } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Home, CheckCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -92,7 +92,7 @@ function inferRelations(
 }
 
 export default function AncestryBookPage() {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [tree, setTree] = useState<FamilyTree | null>(null);
@@ -101,6 +101,8 @@ export default function AncestryBookPage() {
   const [featuredMedia, setFeaturedMedia] = useState<
     Map<string, { url: string; type: "photo" | "video" }>
   >(new Map());
+  const [matchedMember, setMatchedMember] = useState<AppMember | null>(null);
+  const [matchedRelation, setMatchedRelation] = useState<string>("");
   
   // Get the member ID and owner ID from the URL if we're viewing a specific member
   const viewMemberId = searchParams?.get('memberId') || undefined;
@@ -157,7 +159,12 @@ export default function AncestryBookPage() {
         const activeOwner = list[0]?.ownerId || user.uid;
         if (!ignore) setOwnerId(activeOwner);
         const snap = await getDoc(doc(db, "familyTrees", activeOwner));
-        if (!ignore && snap.exists()) setTree(snap.data() as any as FamilyTree);
+        if (!ignore && snap.exists()) {
+          const treeData = snap.data() as any as FamilyTree;
+          setTree(treeData);
+          // Check for name matches on initial load
+          checkNameMatch(treeData);
+        }
       } catch {}
     }
     loadDefault();
@@ -169,7 +176,40 @@ export default function AncestryBookPage() {
   async function loadByOwner(targetOwnerId: string) {
     setPageIndex(0);
     const snap = await getDoc(doc(db, "familyTrees", targetOwnerId));
-    if (snap.exists()) setTree(snap.data() as any as FamilyTree);
+    if (snap.exists()) {
+      const treeData = snap.data() as any as FamilyTree;
+      setTree(treeData);
+      // Check for name matches
+      checkNameMatch(treeData);
+    }
+  }
+
+  function checkNameMatch(treeData: FamilyTree) {
+    if (!user?.displayName || !userProfile?.familyCode) return;
+    
+    const userName = user.displayName.toLowerCase();
+    const members = treeData.members as AppMember[];
+    const edges = treeData.edges as AppEdge[];
+    
+    // Try to find a match by name
+    const match = members.find(m => {
+      const memberName = (m.fullName || `${m.firstName} ${m.lastName}`).toLowerCase();
+      return memberName.includes(userName) || userName.includes(memberName);
+    });
+    
+    if (match) {
+      setMatchedMember(match);
+      // Get relationship
+      const relations = inferRelations(members, edges, match.id);
+      const relation = relations.get(match.id) || "Family Member";
+      setMatchedRelation(relation);
+      
+      toast({
+        title: "✨ Match Found!",
+        description: `We found you in the family tree: ${match.fullName}`,
+        duration: 5000,
+      });
+    }
   }
 
   async function validateFamilyCodeAndLoad() {
@@ -457,6 +497,63 @@ export default function AncestryBookPage() {
       ></div>
 
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 relative z-10">
+        {/* Name Match Alert */}
+        {matchedMember && (
+          <Card className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-400 shadow-lg">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-start gap-4">
+                <div className="bg-green-500 p-3 rounded-full">
+                  <CheckCircle className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl sm:text-2xl font-bold text-green-100 mb-2">
+                    🎉 You're in the Family Tree!
+                  </h3>
+                  <div className="space-y-2 text-green-50">
+                    <p className="text-base sm:text-lg">
+                      <strong>Name:</strong> {matchedMember.fullName || `${matchedMember.firstName} ${matchedMember.lastName}`}
+                    </p>
+                    {matchedRelation && (
+                      <p className="text-base sm:text-lg">
+                        <strong>Position:</strong> {matchedRelation}
+                      </p>
+                    )}
+                    {matchedMember.birthDate && (
+                      <p className="text-sm sm:text-base text-green-200">
+                        <strong>Born:</strong> {matchedMember.birthDate}
+                      </p>
+                    )}
+                    {matchedMember.location && (
+                      <p className="text-sm sm:text-base text-green-200">
+                        <strong>Location:</strong> {
+                          typeof matchedMember.location === 'string' 
+                            ? matchedMember.location 
+                            : `${matchedMember.location.village || ''}, ${matchedMember.location.district || ''}, ${matchedMember.location.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, '')
+                        }
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const memberIndex = pages.findIndex(p => p.id === matchedMember.id);
+                      if (memberIndex >= 0) {
+                        setPageIndex(memberIndex);
+                        toast({
+                          title: "Navigated to your page",
+                          description: "Now viewing your entry in the family book",
+                        });
+                      }
+                    }}
+                    className="mt-4 bg-green-600 hover:bg-green-700"
+                  >
+                    View My Page in Book
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+        
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3">

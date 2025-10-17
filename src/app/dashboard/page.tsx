@@ -19,6 +19,7 @@ import {
   BarChart,
   Bot,
   Search,
+  BookOpen,
 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/contexts/auth-context";
@@ -329,6 +330,81 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Ancestry Book CTA */}
+      <Card className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-amber-200 shadow-lg">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl text-amber-900 flex items-center gap-3">
+            <BookOpen className="h-7 w-7" /> Explore Your Family's Ancestry Book
+          </CardTitle>
+          <CardDescription className="text-base mt-2 text-amber-800">
+            Discover your family's stories and heritage. View beautifully formatted ancestry records, 
+            find where you fit in your family tree, and preserve your family's legacy.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-start gap-3 p-4 bg-white/60 rounded-lg border border-amber-200">
+                <div className="bg-amber-100 p-2 rounded-full">
+                  <BookOpen className="h-5 w-5 text-amber-700" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm mb-1 text-amber-900">
+                    Interactive Book
+                  </h3>
+                  <p className="text-xs text-amber-700">
+                    Turn pages through beautifully designed family stories
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 bg-white/60 rounded-lg border border-amber-200">
+                <div className="bg-amber-100 p-2 rounded-full">
+                  <Users className="h-5 w-5 text-amber-700" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm mb-1 text-amber-900">
+                    Find Yourself
+                  </h3>
+                  <p className="text-xs text-amber-700">
+                    Automatically discover your place in the family tree
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 bg-white/60 rounded-lg border border-amber-200">
+                <div className="bg-amber-100 p-2 rounded-full">
+                  <Globe className="h-5 w-5 text-amber-700" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm mb-1 text-amber-900">
+                    Rich Details
+                  </h3>
+                  <p className="text-xs text-amber-700">
+                    Photos, timelines, locations, and family connections
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button asChild size="lg" className="bg-amber-600 hover:bg-amber-700">
+                <Link href="/dashboard/ancestry">
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  Open Ancestry Book
+                </Link>
+              </Button>
+              {!userProfile?.familyTreeApproved && (
+                <Button asChild size="lg" variant="outline" className="border-amber-600 text-amber-700 hover:bg-amber-50">
+                  <Link href="/dashboard/family-tree">
+                    Start Your Family Tree
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {!analysisCompleted ? (
         <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/20 shadow-lg">

@@ -985,8 +985,8 @@ export default function FamilyTreePage() {
       {/* Regular family tree interface */}
       {!searchParam && (
         <>
-          {/* Tree Switcher */}
-          {userProfile?.familyTreeApproved && mySharedTrees.length > 0 && (
+          {/* Tree Switcher - Show if approved OR viewing shared tree */}
+          {(userProfile?.familyTreeApproved || ownerIdParam) && (
             <div className="border-b bg-white px-4 py-2">
               <TreeSwitcher
                 currentTreeOwner={ownerIdParam}

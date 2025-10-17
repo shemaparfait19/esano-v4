@@ -26,7 +26,6 @@ import { useEffect, useState, useCallback } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { SuggestionCard } from "@/components/dashboard/suggestion-card";
-import { FamilyCodeGenerator } from "@/components/family-tree/family-code-generator";
 import { FamilyTreeSuggestions } from "@/components/dashboard/family-tree-suggestions";
 import { useRouter } from "next/navigation";
 
@@ -269,18 +268,6 @@ export default function DashboardPage() {
           Your personal space to explore your genetic story.
         </p>
       </div>
-
-      {/* Family Code Generator for Approved Users */}
-      {userProfile?.familyTreeApproved && (
-        <div className="max-w-md">
-          <FamilyCodeGenerator
-            userProfile={userProfile}
-            onCodeGenerated={(code) => {
-              console.log("Family code generated:", code);
-            }}
-          />
-        </div>
-      )}
 
       {/* Search Bar */}
       <div className="flex justify-center mb-8">

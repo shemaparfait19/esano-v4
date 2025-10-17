@@ -128,7 +128,7 @@ export default function ProfileSetupPage() {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Jane Doe" {...field} />
+                      <Input placeholder="Uwase Mukamana" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -184,7 +184,7 @@ export default function ProfileSetupPage() {
                     <FormLabel>Known Relatives (comma separated)</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="e.g., John Doe, Mary Doe, ..."
+                        placeholder="e.g., Mugabo Nkurunziza, Mutoni Uwera, ..."
                         {...field}
                       />
                     </FormControl>

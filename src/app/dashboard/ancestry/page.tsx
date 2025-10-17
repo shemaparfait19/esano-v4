@@ -532,7 +532,7 @@ export default function AncestryBookPage() {
               <Input
                 value={headQuery}
                 onChange={(e) => setHeadQuery(e.target.value)}
-                placeholder="e.g., John Doe"
+                placeholder="e.g., Uwase Mukamana"
                 className="bg-slate-900/50 border-slate-700 text-amber-100 placeholder:text-amber-300/40"
               />
               <Button

@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { saveUserDna, analyzeDna } from "@/app/actions";
 import { DnaProfileManager } from "@/components/dashboard/dna-profile-manager";
 import { LocationSelector } from "@/components/family-tree/location-selector";
+import { CountrySelector } from "@/components/family-tree/country-selector";
 import {
   User,
   Calendar,
@@ -58,6 +59,7 @@ export default function ProfilePage() {
     nationality: "",
     nid: "",
     maritalStatus: "",
+    dialCode: "",
     phoneNumber: "",
     email: "",
     province: "",
@@ -111,6 +113,7 @@ export default function ProfilePage() {
           nationality: d.nationality ?? "",
           nid: d.nid ?? "",
           maritalStatus: d.maritalStatus ?? "",
+          dialCode: d.dialCode ?? "",
           phoneNumber: d.phoneNumber ?? "",
           email: d.email ?? "",
           province: d.province ?? "",
@@ -184,6 +187,8 @@ export default function ProfilePage() {
         dataToSave.nationality = form.nationality.trim();
       if (form.nid?.trim()) dataToSave.nid = form.nid.trim();
       if (form.maritalStatus) dataToSave.maritalStatus = form.maritalStatus;
+      if (form.dialCode?.trim())
+        dataToSave.dialCode = form.dialCode.trim();
       if (form.phoneNumber?.trim())
         dataToSave.phoneNumber = form.phoneNumber.trim();
       if (form.email?.trim()) dataToSave.email = form.email.trim();
@@ -430,16 +435,14 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Nationality</label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    className="pl-10"
-                    value={form.nationality}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, nationality: e.target.value }))
-                    }
-                  />
-                </div>
+                <CountrySelector
+                  value={form.nationality}
+                  onChange={(value) =>
+                    setForm((f) => ({ ...f, nationality: value }))
+                  }
+                  placeholder="Select nationality..."
+                  mode="country"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">
@@ -481,14 +484,23 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Contact Number</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <div className="grid grid-cols-3 gap-2">
+                  <CountrySelector
+                    value={form.dialCode}
+                    onChange={(value) =>
+                      setForm((f) => ({ ...f, dialCode: value }))
+                    }
+                    placeholder="Code..."
+                    mode="phone"
+                    className="col-span-1"
+                  />
                   <Input
-                    className="pl-10"
+                    className="col-span-2"
                     value={form.phoneNumber}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, phoneNumber: e.target.value }))
                     }
+                    placeholder="Enter phone number"
                   />
                 </div>
               </div>

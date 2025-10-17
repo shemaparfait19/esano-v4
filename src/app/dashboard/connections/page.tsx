@@ -31,29 +31,29 @@ export default function ConnectionsPage() {
       try {
         console.log('[Connections] Loading connections for user:', user.uid);
         
-        // Query connections collection for this user
-        const connectionsRef = collection(db, "connections");
+        // Query connectionRequests collection for accepted connections
+        const requestsRef = collection(db, "connectionRequests");
         
-        // Query both 'connected' and 'accepted' statuses separately (Firestore limitation)
-        const [connectedDocs, acceptedDocs] = await Promise.all([
+        // Get all accepted connection requests where user is either sender or receiver
+        const [sentAccepted, receivedAccepted] = await Promise.all([
           getDocs(
             query(
-              connectionsRef,
-              where("participants", "array-contains", user.uid),
-              where("status", "==", "connected")
+              requestsRef,
+              where("fromUserId", "==", user.uid),
+              where("status", "==", "accepted")
             )
           ),
           getDocs(
             query(
-              connectionsRef,
-              where("participants", "array-contains", user.uid),
+              requestsRef,
+              where("toUserId", "==", user.uid),
               where("status", "==", "accepted")
             )
           ),
         ]);
         
-        const allDocs = [...connectedDocs.docs, ...acceptedDocs.docs];
-        console.log('[Connections] Found', allDocs.length, 'connections');
+        const allDocs = [...sentAccepted.docs, ...receivedAccepted.docs];
+        console.log('[Connections] Found', allDocs.length, 'accepted connections');
 
         // Get all connected user IDs
         const connectedUserIds = new Set<string>();
@@ -61,12 +61,12 @@ export default function ConnectionsPage() {
 
         allDocs.forEach((doc) => {
           const data = doc.data();
-          const participants = data.participants || [];
-          const otherUserId = participants.find((id: string) => id !== user.uid);
+          // Get the other user's ID (the one who isn't the current user)
+          const otherUserId = data.fromUserId === user.uid ? data.toUserId : data.fromUserId;
           
           if (otherUserId) {
             connectedUserIds.add(otherUserId);
-            connectionDates.set(otherUserId, data.createdAt || data.timestamp || new Date().toISOString());
+            connectionDates.set(otherUserId, data.createdAt || new Date().toISOString());
           }
         });
 
@@ -175,54 +175,60 @@ export default function ConnectionsPage() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {connections.map((connection) => (
-                <div
-                  key={connection.userId}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
+                <Card key={connection.userId} className="flex flex-col">
+                  <CardHeader className="flex-row items-center gap-4 pb-3">
+                    <Avatar className="h-14 w-14">
                       <AvatarImage
                         src={connection.photoURL || `https://picsum.photos/seed/${connection.userId}/128`}
                         alt={connection.displayName}
                       />
-                      <AvatarFallback className="bg-primary/10 text-primary">
+                      <AvatarFallback className="bg-primary/10 text-primary text-lg">
                         {getInitials(connection.displayName)}
                       </AvatarFallback>
                     </Avatar>
                     
-                    <div>
-                      <h4 className="font-semibold">{connection.displayName}</h4>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="font-headline text-lg truncate">
+                        {connection.displayName}
+                      </CardTitle>
                       {connection.email && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground truncate">
                           {connection.email}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground">
-                        Connected {new Date(connection.connectionDate).toLocaleDateString()}
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="pt-0 pb-3">
+                    <div className="flex flex-wrap gap-2">
+                      <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-800 text-xs font-medium">
+                        ✓ Connected
+                      </div>
+                      <p className="text-xs text-muted-foreground w-full mt-1">
+                        Since {new Date(connection.connectionDate).toLocaleDateString()}
                       </p>
                     </div>
-                  </div>
+                  </CardContent>
 
-                  <div className="flex items-center gap-2">
+                  <div className="mt-auto p-4 pt-0 space-y-2">
+                    <Button
+                      className="w-full gap-2"
+                      onClick={() => handleMessage(connection.userId)}
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Send Message
+                    </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      className="w-full"
                       onClick={() => handleViewProfile(connection.userId)}
                     >
                       View Profile
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleMessage(connection.userId)}
-                      className="gap-2"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      Message
-                    </Button>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           )}

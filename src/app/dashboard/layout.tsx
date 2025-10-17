@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   MessageSquare,
+  Settings,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import {
@@ -46,6 +47,7 @@ const navItems = [
   { href: "/dashboard/insights", icon: BarChart, label: "Insights" },
   { href: "/dashboard/assistant", icon: Bot, label: "Assistant" },
   { href: "/dashboard/feedback", icon: MessageSquare, label: "Feedback" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
 export default function DashboardLayout({

@@ -67,8 +67,12 @@ export function TimelineView({ members, edges, onViewMember }: TimelineViewProps
 
   if (members.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        No family members to display
+      <div className="flex flex-col items-center justify-center h-64 text-center p-6">
+        <Calendar className="h-16 w-16 text-muted-foreground/30 mb-4" />
+        <h3 className="font-semibold text-lg mb-2">No Family Members Yet</h3>
+        <p className="text-muted-foreground text-sm">
+          Switch to Table view to start adding family members
+        </p>
       </div>
     );
   }

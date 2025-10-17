@@ -69,8 +69,24 @@ export function TreeChartView({ members, edges, onViewMember }: TreeChartViewPro
 
   if (members.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        No family members to display
+      <div className="flex flex-col items-center justify-center h-64 text-center p-6">
+        <User className="h-16 w-16 text-muted-foreground/30 mb-4" />
+        <h3 className="font-semibold text-lg mb-2">No Family Members Yet</h3>
+        <p className="text-muted-foreground text-sm">
+          Switch to Table view to start adding family members
+        </p>
+      </div>
+    );
+  }
+
+  if (treeStructure.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center p-6">
+        <User className="h-16 w-16 text-muted-foreground/30 mb-4" />
+        <h3 className="font-semibold text-lg mb-2">Unable to Build Tree</h3>
+        <p className="text-muted-foreground text-sm">
+          There might be an issue with the relationships. Switch to Table view to review.
+        </p>
       </div>
     );
   }

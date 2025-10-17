@@ -246,7 +246,7 @@ export default function FeedbackPage() {
             <p>• High priority: 24-48 hours</p>
             <p>• Medium priority: 3-5 days</p>
             <p>• Low priority: 1-2 weeks</p>
-            <p>• We'll update you on progress</p>
+            <p>• We'll update you on progress via your email inbox</p>
           </CardContent>
         </Card>
       </div>

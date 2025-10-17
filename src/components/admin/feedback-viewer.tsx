@@ -24,6 +24,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Mail,
+  ExternalLink,
 } from "lucide-react";
 
 type Feedback = {
@@ -114,6 +116,15 @@ export function FeedbackViewer({ adminId }: FeedbackViewerProps) {
     }
   };
 
+  const handleReplyViaGmail = (feedback: Feedback) => {
+    const subject = encodeURIComponent(`Re: ${feedback.subject || 'Your Feedback on Esano'}`);
+    const body = encodeURIComponent(
+      `Hi ${feedback.userName},\n\nThank you for your feedback regarding: "${feedback.subject || 'No subject'}"\n\nYour message:\n"${feedback.message}"\n\n---\n\nOur response:\n\n[Write your response here]\n\nBest regards,\nEsano Team`
+    );
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(feedback.userEmail)}&su=${subject}&body=${body}`;
+    window.open(gmailUrl, '_blank');
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "suggestion":
@@ -179,13 +190,22 @@ export function FeedbackViewer({ adminId }: FeedbackViewerProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
-            <MessageSquare className="h-6 w-6" />
-            User Feedback & Suggestions
-          </CardTitle>
-          <CardDescription>
-            Manage feedback, complaints, and feature requests from users
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
+                <MessageSquare className="h-6 w-6" />
+                User Feedback & Suggestions
+                {feedback.filter((f) => f.status === "pending").length > 0 && (
+                  <Badge variant="destructive" className="ml-2">
+                    {feedback.filter((f) => f.status === "pending").length} New
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Manage feedback, complaints, and feature requests from users
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
@@ -329,12 +349,28 @@ export function FeedbackViewer({ adminId }: FeedbackViewerProps) {
           <CardContent className="space-y-4">
             <div>
               <Label>From User</Label>
-              <p className="text-sm">
-                {selectedFeedback.userName} ({selectedFeedback.userEmail})
-              </p>
-              <p className="text-xs text-muted-foreground">
-                User ID: {selectedFeedback.userId}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm">
+                    {selectedFeedback.userName} ({selectedFeedback.userEmail})
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    User ID: {selectedFeedback.userId}
+                  </p>
+                </div>
+                {selectedFeedback.userEmail && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleReplyViaGmail(selectedFeedback)}
+                    className="gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Reply via Gmail
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div>

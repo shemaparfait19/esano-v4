@@ -22,17 +22,6 @@ export function ChatAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [systemStatus, setSystemStatus] = useState<{
-    checked: boolean;
-    hasGemini: boolean;
-    hasOpenRouter: boolean;
-    hasDeepseek: boolean;
-  }>({
-    checked: false,
-    hasGemini: false,
-    hasOpenRouter: false,
-    hasDeepseek: false,
-  });
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -48,11 +37,6 @@ export function ChatAssistant() {
     }
   }, [messages]);
 
-  // Check system status on mount
-  useEffect(() => {
-    checkSystemStatus();
-  }, []);
-
   // Cleanup abort controller on unmount
   useEffect(() => {
     return () => {
@@ -61,29 +45,6 @@ export function ChatAssistant() {
       }
     };
   }, []);
-
-  const checkSystemStatus = async () => {
-    try {
-      const res = await fetch("/api/assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: "__diag", userId: user?.uid }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setSystemStatus({
-          checked: true,
-          hasGemini: data.hasGemini,
-          hasOpenRouter: data.hasOpenRouter,
-          hasDeepseek: data.hasDeepseek,
-        });
-        console.log("System status:", data);
-      }
-    } catch (e) {
-      console.error("Failed to check system status:", e);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,38 +133,6 @@ export function ChatAssistant() {
 
   return (
     <div className="flex flex-col h-full border rounded-lg bg-card">
-      {/* System Status Bar */}
-      {systemStatus.checked && (
-        <div className="border-b px-4 py-2 bg-muted/50">
-          <div className="flex items-center gap-4 text-xs">
-            <span className="font-medium">AI Providers:</span>
-            <div className="flex items-center gap-1">
-              {systemStatus.hasGemini ? (
-                <CheckCircle className="h-3 w-3 text-green-600" />
-              ) : (
-                <AlertCircle className="h-3 w-3 text-red-600" />
-              )}
-              <span>Gemini</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {systemStatus.hasOpenRouter ? (
-                <CheckCircle className="h-3 w-3 text-green-600" />
-              ) : (
-                <AlertCircle className="h-3 w-3 text-red-600" />
-              )}
-              <span>OpenRouter</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {systemStatus.hasDeepseek ? (
-                <CheckCircle className="h-3 w-3 text-green-600" />
-              ) : (
-                <AlertCircle className="h-3 w-3 text-red-600" />
-              )}
-              <span>DeepSeek</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
         <div className="space-y-6">
@@ -315,16 +244,6 @@ export function ChatAssistant() {
             )}
           </Button>
         </form>
-        <p className="text-xs text-muted-foreground mt-2">
-          {systemStatus.checked &&
-            !systemStatus.hasGemini &&
-            !systemStatus.hasOpenRouter &&
-            !systemStatus.hasDeepseek && (
-              <span className="text-orange-600">
-                ⚠️ No AI providers configured. Please add API keys.
-              </span>
-            )}
-        </p>
       </div>
     </div>
   );

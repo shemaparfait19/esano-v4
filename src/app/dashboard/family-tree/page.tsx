@@ -1017,15 +1017,15 @@ export default function FamilyTreePage() {
           )}
 
           {!ownerIdParam && !userProfile?.familyTreeApproved && (
-            <div className="flex-none border-b bg-white/60">
-              <div className="px-4 py-6">
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="max-w-2xl w-full">
                 <FamilyTreeApplicationForm />
               </div>
             </div>
           )}
 
-          {/* Tree viewport for approved users OR viewing own tree */}
-          {(userProfile?.familyTreeApproved || !ownerIdParam) && (
+          {/* Tree viewport for approved users only */}
+          {userProfile?.familyTreeApproved && !searchParam && (
           <>
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             <div className="flex-1 relative" id="tree-viewport">

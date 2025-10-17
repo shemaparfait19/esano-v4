@@ -331,34 +331,79 @@ export default function DashboardPage() {
       </div>
 
       {!analysisCompleted ? (
-        <Card className="bg-gradient-to-br from-primary/5 via-background to-background">
+        <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/20 shadow-lg">
           <CardHeader>
-            <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
-              <Dna className="h-6 w-6" /> Start Your Discovery
+            <CardTitle className="font-headline text-3xl text-primary flex items-center gap-3">
+              <Dna className="h-8 w-8" /> Begin Your DNA Journey
             </CardTitle>
-            <CardDescription>
-              You haven't analyzed any DNA data yet. Upload your file to unlock
-              your personalized reports and insights.
+            <CardDescription className="text-base mt-2">
+              Unlock the secrets hidden in your DNA. Upload your genetic data to discover your ancestry, 
+              find relatives, and explore your unique heritage.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              <Image
-                src="https://picsum.photos/300/200"
-                width={300}
-                height={200}
-                alt="DNA Helix"
-                data-ai-hint="dna abstract"
-                className="rounded-lg object-cover"
-              />
-              <div className="flex-1">
-                <p className="mb-4 text-foreground/80">
-                  Supported formats include AncestryDNA, 23andMe, and
-                  MyHeritage. Your data is encrypted and secure.
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3 p-4 bg-background/50 rounded-lg border border-primary/10">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Dna className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm mb-1">DNA Analysis</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Get detailed insights about your genetic makeup
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 bg-background/50 rounded-lg border border-primary/10">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm mb-1">Find Relatives</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Connect with family members worldwide
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 bg-background/50 rounded-lg border border-primary/10">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Globe className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm mb-1">Ancestry Map</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Trace your roots across the globe
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-primary/5 p-6 rounded-lg border border-primary/20">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-primary" />
+                  Supported DNA Test Providers
+                </h4>
+                <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm mb-4">
+                  <li className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                    <span>AncestryDNA</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                    <span>23andMe</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                    <span>MyHeritage DNA</span>
+                  </li>
+                </ul>
+                <p className="text-xs text-muted-foreground mb-4">
+                  🔒 Your genetic data is encrypted and secure. We never share your information without permission.
                 </p>
-                <Button asChild>
+                <Button asChild size="lg" className="w-full sm:w-auto">
                   <Link href="/dashboard/dna-analysis">
-                    Upload DNA File <ArrowRight className="ml-2 h-4 w-4" />
+                    Upload DNA File <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
               </div>

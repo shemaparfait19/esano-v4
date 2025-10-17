@@ -17,16 +17,34 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, User, KeyRound, Mail } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import type { UserProfile } from "@/types/firestore";
+
+// List of common disposable/fake email domains to block
+const disposableEmailDomains = [
+  'tempmail.com', 'guerrillamail.com', 'mailinator.com', '10minutemail.com',
+  'throwaway.email', 'fakeinbox.com', 'trashmail.com', 'maildrop.cc',
+  'yopmail.com', 'temp-mail.org', 'getnada.com', 'test.com', 'example.com'
+];
 
 const formSchema = z.object({
   displayName: z
     .string()
     .min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
+  email: z
+    .string()
+    .email({ message: "Please enter a valid email address." })
+    .refine((email) => {
+      const domain = email.split('@')[1]?.toLowerCase();
+      return domain && !disposableEmailDomains.includes(domain);
+    }, { message: "Please use a valid personal or work email address." })
+    .refine((email) => {
+      // Ensure email has proper format with valid TLD
+      const domain = email.split('@')[1];
+      return domain && domain.includes('.') && domain.split('.').pop()!.length >= 2;
+    }, { message: "Please enter a valid email with a proper domain." }),
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters." }),
@@ -87,6 +105,9 @@ export function SignupForm() {
         }
       }
 
+      // Send email verification
+      await sendEmailVerification(user);
+
       // Create user profile in Firestore
       const userProfile: UserProfile = {
         userId: user.uid,
@@ -94,12 +115,13 @@ export function SignupForm() {
         displayName: values.displayName,
         ...familyCodeData,
         createdAt: new Date().toISOString(),
+        emailVerified: false,
       };
       await setDoc(doc(db, "users", user.uid), userProfile);
 
       toast({
         title: "Account Created",
-        description: "You have been successfully signed up.",
+        description: "Please check your email to verify your account before logging in.",
       });
       router.push("/dashboard");
     } catch (error: any) {
@@ -147,9 +169,13 @@ export function SignupForm() {
                     placeholder="name@example.com"
                     {...field}
                     className="pl-9"
+                    type="email"
                   />
                 </FormControl>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Please use a valid personal or work email. Disposable/temporary emails are not allowed.
+              </p>
               <FormMessage />
             </FormItem>
           )}

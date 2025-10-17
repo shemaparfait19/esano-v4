@@ -24,7 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { saveUserDna, analyzeDna } from "@/app/actions";
 import { DnaProfileManager } from "@/components/dashboard/dna-profile-manager";
-import { LocationSelector } from "@/components/ui/location-selector";
+import { LocationSelector } from "@/components/family-tree/location-selector";
 import {
   User,
   Calendar,
@@ -511,16 +511,20 @@ export default function ProfilePage() {
                   Birth Location
                 </label>
                 <LocationSelector
-                  province={form.province}
-                  district={form.district}
-                  sector={form.sector}
-                  village={form.village}
-                  onLocationChange={(location) =>
+                  value={{
+                    province: form.province,
+                    district: form.district,
+                    sector: form.sector,
+                    cell: form.cell,
+                    village: form.village,
+                  }}
+                  onChange={(location) =>
                     setForm((f) => ({
                       ...f,
                       province: location.province,
                       district: location.district,
                       sector: location.sector,
+                      cell: location.cell,
                       village: location.village,
                     }))
                   }
@@ -643,16 +647,20 @@ export default function ProfilePage() {
                   Residence Location
                 </label>
                 <LocationSelector
-                  province={form.residenceProvince}
-                  district={form.residenceDistrict}
-                  sector={form.residenceSector}
-                  village={form.residenceVillage}
-                  onLocationChange={(location) =>
+                  value={{
+                    province: form.residenceProvince,
+                    district: form.residenceDistrict,
+                    sector: form.residenceSector,
+                    cell: form.residenceCell,
+                    village: form.residenceVillage,
+                  }}
+                  onChange={(location) =>
                     setForm((f) => ({
                       ...f,
                       residenceProvince: location.province,
                       residenceDistrict: location.district,
                       residenceSector: location.sector,
+                      residenceCell: location.cell,
                       residenceVillage: location.village,
                     }))
                   }

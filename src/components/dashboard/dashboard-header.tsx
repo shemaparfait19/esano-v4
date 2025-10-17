@@ -543,7 +543,7 @@ export function DashboardHeader() {
               {user?.displayName || user?.email || "My Account"}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
               <User className="mr-2" />
               <span>Profile</span>
             </DropdownMenuItem>

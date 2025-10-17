@@ -70,36 +70,36 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-2">
           Overview of Esano platform statistics and recent activity
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalUsers}</div>
             <p className="text-xs text-muted-foreground">Registered users</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Pending Applications
             </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">
               {stats.pendingApplications}
             </div>
             <p className="text-xs text-muted-foreground">Awaiting review</p>
@@ -108,13 +108,13 @@ export default function AdminDashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Approved Applications
             </CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               {stats.approvedApplications}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -125,13 +125,13 @@ export default function AdminDashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Total Family Trees
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalFamilyTrees}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalFamilyTrees}</div>
             <p className="text-xs text-muted-foreground">Active family trees</p>
           </CardContent>
         </Card>
@@ -149,18 +149,18 @@ export default function AdminDashboardPage() {
           {stats.recentActivity.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No recent activity</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {stats.recentActivity.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-center space-x-4 p-4 border rounded-lg"
+                  className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg"
                 >
-                  <AlertCircle className="h-5 w-5 text-blue-500" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
+                  <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium break-words">
                       {activity.description}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 mt-1">
                       {new Date(activity.timestamp).toLocaleString()}
                     </p>
                   </div>

@@ -1,9 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dna, Bot, Users, Globe, BarChart, Sparkles } from "lucide-react";
+import { Dna, Bot, Users, Globe, BarChart, Sparkles, Menu, X } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { useState } from "react";
 
 const features = [
   {
@@ -45,21 +48,24 @@ const features = [
 ];
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center">
           <div className="mr-4 flex">
-            <Link href="/" className="mr-6 flex items-center">
-              <Logo className="h-10 w-28" />
+            <Link href="/" className="flex items-center">
+              <Logo className="h-8 w-24 sm:h-10 sm:w-28" />
             </Link>
           </div>
-          <div className="flex flex-1 items-center justify-end space-x-2">
+          <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6 mr-4 text-sm text-muted-foreground">
-              <Link href="/dashboard/relatives">Relatives</Link>
-              <Link href="/dashboard/family-tree">Family Tree</Link>
-              <Link href="/dashboard/dna-analysis">DNA Analysis</Link>
-              <Link href="/dashboard/insights">Insights</Link>
+              <Link href="/dashboard/relatives" className="hover:text-foreground transition-colors">Relatives</Link>
+              <Link href="/dashboard/family-tree" className="hover:text-foreground transition-colors">Family Tree</Link>
+              <Link href="/dashboard/dna-analysis" className="hover:text-foreground transition-colors">DNA Analysis</Link>
+              <Link href="/dashboard/insights" className="hover:text-foreground transition-colors">Insights</Link>
               <Link
                 href="/counseling"
                 className="text-foreground hover:text-primary transition-colors"
@@ -67,14 +73,79 @@ export default function Home() {
                 Counseling
               </Link>
             </nav>
-            <Button variant="ghost" asChild>
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup">Get Started</Link>
+            
+            {/* Auth Buttons */}
+            <div className="hidden sm:flex items-center gap-2">
+              <Button variant="ghost" asChild>
+                <Link href="/login">Log In</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/signup">Get Started</Link>
+              </Button>
+            </div>
+            
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t bg-background">
+            <nav className="container py-4 flex flex-col gap-3">
+              <Link 
+                href="/dashboard/relatives" 
+                className="px-4 py-2 hover:bg-accent rounded-md transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Relatives
+              </Link>
+              <Link 
+                href="/dashboard/family-tree" 
+                className="px-4 py-2 hover:bg-accent rounded-md transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Family Tree
+              </Link>
+              <Link 
+                href="/dashboard/dna-analysis" 
+                className="px-4 py-2 hover:bg-accent rounded-md transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                DNA Analysis
+              </Link>
+              <Link 
+                href="/dashboard/insights" 
+                className="px-4 py-2 hover:bg-accent rounded-md transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Insights
+              </Link>
+              <Link 
+                href="/counseling" 
+                className="px-4 py-2 hover:bg-accent rounded-md transition-colors font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Counseling
+              </Link>
+              <div className="flex flex-col gap-2 mt-2 px-4">
+                <Button variant="ghost" asChild className="w-full">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Log In</Link>
+                </Button>
+                <Button asChild className="w-full">
+                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                </Button>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main className="flex-1">

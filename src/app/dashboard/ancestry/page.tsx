@@ -528,7 +528,7 @@ export default function AncestryBookPage() {
         }}
       ></div>
 
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 relative z-10">
+      <div className="container mx-auto max-w-7xl space-y-4 sm:space-y-6 relative z-10 px-2 sm:px-4">
         {/* Name Match Alert */}
         {matchedMember && (
           <Card className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-400 shadow-lg">
@@ -632,53 +632,55 @@ export default function AncestryBookPage() {
         </div>
 
         {/* Search & Access */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3">
-          <Card className="p-3 bg-slate-800/40 border-slate-700">
-            <div className="text-amber-200 text-xs mb-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <Card className="p-3 sm:p-4 bg-slate-800/40 border-slate-700">
+            <div className="text-amber-200 text-xs sm:text-sm mb-2">
               Have a family code?
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 value={familyCode}
                 onChange={(e) => setFamilyCode(e.target.value)}
-                placeholder="Enter family code"
-                className="bg-slate-900/50 border-slate-700 text-amber-100 placeholder:text-amber-300/40"
+                placeholder="Enter code"
+                className="bg-slate-900/50 border-slate-700 text-amber-100 placeholder:text-amber-300/40 text-sm"
               />
               <Button
                 size="sm"
                 onClick={validateFamilyCodeAndLoad}
                 disabled={!familyCode.trim() || searching}
+                className="w-full sm:w-auto"
               >
                 Open
               </Button>
             </div>
           </Card>
-          <Card className="p-3 bg-slate-800/40 border-slate-700 md:col-span-2">
-            <div className="text-amber-200 text-xs mb-1">
+          <Card className="p-3 sm:p-4 bg-slate-800/40 border-slate-700 lg:col-span-2">
+            <div className="text-amber-200 text-xs sm:text-sm mb-2">
               Search by family head
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 value={headQuery}
                 onChange={(e) => setHeadQuery(e.target.value)}
                 placeholder="e.g., Uwase Mukamana"
-                className="bg-slate-900/50 border-slate-700 text-amber-100 placeholder:text-amber-300/40"
+                className="bg-slate-900/50 border-slate-700 text-amber-100 placeholder:text-amber-300/40 text-sm"
               />
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={searchByHead}
                 disabled={!headQuery.trim() || searching}
+                className="w-full sm:w-auto"
               >
                 Search
               </Button>
             </div>
             {searchResults.length > 0 && (
-              <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="mt-3 grid grid-cols-1 gap-2">
                 {searchResults.map((r) => (
                   <div
                     key={`${r.ownerId}-${r.headName}`}
-                    className="text-amber-100 bg-slate-900/40 border border-slate-700 rounded p-2 flex items-center justify-between"
+                    className="text-amber-100 bg-slate-900/40 border border-slate-700 rounded p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"
                   >
                     <div className="text-xs">
                       <div className="font-semibold">
@@ -691,7 +693,7 @@ export default function AncestryBookPage() {
                         Members: {r.membersCount ?? "—"}
                       </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-2 w-full sm:w-auto">
                       <Button
                         size="sm"
                         variant="ghost"
@@ -739,15 +741,15 @@ export default function AncestryBookPage() {
         )}
 
         {/* Book Container */}
-        <div className="flex items-center justify-center relative">
-          <div className="relative w-full">
+        <div className="flex items-center justify-center relative px-0 sm:px-4">
+          <div className="relative w-full max-w-6xl mx-auto">
             {/* Navigation Buttons - Desktop */}
             <Button
               variant="ghost"
               size="lg"
               onClick={prevPage}
               disabled={pageIndex === 0 || anim !== "none"}
-              className="hidden lg:flex absolute -left-14 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-500 shadow-xl disabled:opacity-20 transition-all"
+              className="hidden xl:flex absolute -left-16 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-500 shadow-xl disabled:opacity-20 transition-all"
             >
               <ChevronLeft className="h-6 w-6 text-amber-300" />
             </Button>
@@ -757,7 +759,7 @@ export default function AncestryBookPage() {
               size="lg"
               onClick={nextPage}
               disabled={pageIndex >= pages.length - 1 || anim !== "none"}
-              className="hidden lg:flex absolute -right-14 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-500 shadow-xl disabled:opacity-20 transition-all"
+              className="hidden xl:flex absolute -right-16 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-500 shadow-xl disabled:opacity-20 transition-all"
             >
               <ChevronRight className="h-6 w-6 text-amber-300" />
             </Button>
@@ -787,9 +789,9 @@ export default function AncestryBookPage() {
                     "0 25px 50px -12px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(139, 69, 19, 0.1)",
                 }}
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 min-h-[500px] sm:min-h-[600px] md:min-h-[650px]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-[450px] sm:min-h-[500px] lg:min-h-[600px]">
                   {/* Left Page */}
-                  <div className="p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col gap-3 sm:gap-4 md:gap-5 bg-gradient-to-br from-amber-50/95 to-yellow-50/90 md:border-r-2 border-amber-900/20 relative">
+                  <div className="p-4 sm:p-6 lg:p-8 xl:p-10 flex flex-col gap-3 sm:gap-4 lg:gap-5 bg-gradient-to-br from-amber-50/95 to-yellow-50/90 lg:border-r-2 border-amber-900/20 relative">
                     {/* Page texture overlay */}
                     <div
                       className="absolute inset-0 opacity-5"
@@ -873,7 +875,7 @@ export default function AncestryBookPage() {
                   </div>
 
                   {/* Right Page */}
-                  <div className="p-4 sm:p-6 md:p-8 lg:p-10 space-y-3 sm:space-y-4 md:space-y-5 bg-gradient-to-br from-yellow-50/90 to-amber-50/95 flex flex-col relative border-t md:border-t-0 border-amber-900/20">
+                  <div className="p-4 sm:p-6 lg:p-8 xl:p-10 space-y-3 sm:space-y-4 lg:space-y-5 bg-gradient-to-br from-yellow-50/90 to-amber-50/95 flex flex-col relative border-t lg:border-t-0 border-amber-900/20">
                     {/* Page texture overlay */}
                     <div
                       className="absolute inset-0 opacity-5"
@@ -906,7 +908,7 @@ export default function AncestryBookPage() {
             </div>
 
             {/* Mobile Navigation Buttons */}
-            <div className="flex lg:hidden justify-between mt-4 gap-2">
+            <div className="flex xl:hidden justify-between mt-4 gap-2">
               <Button
                 variant="ghost"
                 size="lg"

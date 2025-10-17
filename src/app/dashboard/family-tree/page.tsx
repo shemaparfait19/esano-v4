@@ -545,6 +545,26 @@ export default function FamilyTreePage() {
         }
       }
 
+      // Mark family head if the owner has isFamilyHead status
+      if (!ownerIdParam && userProfile?.isFamilyHead && data.tree.members) {
+        // Find the member that represents the owner (usually tagged with "me" or matching user data)
+        const ownerMember = data.tree.members.find((m: any) => 
+          m.tags?.includes("me") || 
+          m.fullName === userProfile.fullName ||
+          m.firstName === userProfile.firstName
+        );
+        
+        if (ownerMember) {
+          // Mark this member as head of family
+          ownerMember.isHeadOfFamily = true;
+          console.log(`👑 Marked ${ownerMember.fullName} as family head`);
+        } else if (data.tree.members.length > 0) {
+          // If no match found, mark the first member as head
+          data.tree.members[0].isHeadOfFamily = true;
+          console.log(`👑 Marked first member ${data.tree.members[0].fullName} as family head`);
+        }
+      }
+
       setTree(data.tree);
 
       if (ownerIdParam && user?.uid) {

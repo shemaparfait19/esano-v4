@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, adminAuth } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -50,14 +50,47 @@ export async function DELETE(
   try {
     const { userId } = params;
 
-    // Delete user document
+    // Delete Firebase Auth user
+    try {
+      await adminAuth.deleteUser(userId);
+      console.log(`✅ Deleted Firebase Auth user: ${userId}`);
+    } catch (authError: any) {
+      console.error("Failed to delete auth user:", authError);
+      // Continue even if auth deletion fails (user might not exist in auth)
+    }
+
+    // Delete user document from Firestore
     await adminDb.collection("users").doc(userId).delete();
+    console.log(`✅ Deleted Firestore user document: ${userId}`);
 
-    // Also delete any related data (family trees, applications, etc.)
-    // Note: This is a basic implementation. In production, you might want to
-    // archive the data instead of deleting it completely.
+    // Delete related data
+    try {
+      // Delete user's family tree
+      await adminDb.collection("familyTrees").doc(userId).delete();
+      console.log(`✅ Deleted family tree for user: ${userId}`);
+    } catch (e) {
+      // Tree might not exist
+    }
 
-    return NextResponse.json({ success: true });
+    try {
+      // Delete family tree applications
+      const apps = await adminDb
+        .collection("familyTreeApplications")
+        .where("userId", "==", userId)
+        .get();
+      
+      const batch = adminDb.batch();
+      apps.docs.forEach((doc: any) => batch.delete(doc.ref));
+      await batch.commit();
+      console.log(`✅ Deleted ${apps.docs.length} applications for user: ${userId}`);
+    } catch (e) {
+      console.error("Failed to delete applications:", e);
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "User and all related data deleted successfully" 
+    });
   } catch (error: any) {
     console.error("Error deleting user:", error);
     return NextResponse.json(

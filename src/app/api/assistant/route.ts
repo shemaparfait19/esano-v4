@@ -206,12 +206,38 @@ async function buildComprehensiveFamilyContext(userId: string) {
       return desc;
     });
 
-    console.log(`[Context] Generated ${facts.length} relationship facts`);
+    // Build comprehensive relationship map for ALL members (not just user)
+    const allRelationships: string[] = [];
+    
+    // Parent-child relationships
+    edges.forEach((e: any) => {
+      if (e.type === 'parent' && members[e.fromId] && members[e.toId]) {
+        const parent = formatPerson(e.fromId);
+        const child = formatPerson(e.toId);
+        if (parent && child) {
+          allRelationships.push(`${parent} is the parent of ${child}`);
+        }
+      }
+    });
+
+    // Spouse/Partner relationships
+    edges.forEach((e: any) => {
+      if ((e.type === 'spouse' || e.type === 'partner') && members[e.fromId] && members[e.toId]) {
+        const person1 = formatPerson(e.fromId);
+        const person2 = formatPerson(e.toId);
+        if (person1 && person2) {
+          allRelationships.push(`${person1} is married to/partnered with ${person2}`);
+        }
+      }
+    });
+
+    console.log(`[Context] Generated ${facts.length} user facts and ${allRelationships.length} total relationships`);
 
     return {
       facts: facts.slice(0, 50), // Limit to 50 most relevant facts
       members: allMembers.slice(0, 30), // Limit to 30 members
       relationships: relationships.slice(0, 30),
+      allRelationships: allRelationships.slice(0, 100), // All family relationships
     };
   } catch (e) {
     console.error("[Context] Error building family context:", e);
@@ -569,6 +595,12 @@ export async function POST(req: Request) {
       if (familyContext.members.length > 0) {
         contextParts.push(
           `\nALL FAMILY MEMBERS IN TREE:\n${familyContext.members.join("\n")}`
+        );
+      }
+
+      if (familyContext.allRelationships && familyContext.allRelationships.length > 0) {
+        contextParts.push(
+          `\nALL FAMILY RELATIONSHIPS (Complete Network):\n${familyContext.allRelationships.join("\n")}`
         );
       }
 

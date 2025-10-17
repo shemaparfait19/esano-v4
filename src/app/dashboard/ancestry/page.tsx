@@ -426,16 +426,48 @@ export default function AncestryBookPage() {
       };
     };
 
-    const scored = members.map((m) => ({
-      m,
-      score: relations.get(m.id)?.includes("Parent")
-        ? 2
-        : relations.get(m.id)?.includes("Grandparent")
-        ? 1
-        : 0,
-    }));
-    scored.sort((a, b) => b.score - a.score);
-    const ordered = scored.map((s) => s.m);
+    // Build proper genealogical ordering by generation and age
+    const getGenerationDepth = (memberId: string): number => {
+      const relation = relations.get(memberId);
+      if (!relation) return 0;
+      
+      // Calculate generation depth from "You"
+      if (relation === "You") return 0;
+      if (relation === "Child") return 1;
+      if (relation === "Grandchild") return 2;
+      if (relation === "Parent") return -1;
+      if (relation === "Grandparent") return -2;
+      
+      // Extract generation count from "Nx Great-Grandparent" or "Nx Great-Grandchild"
+      const greatMatch = relation.match(/(\d+)x Great-(.+)/);
+      if (greatMatch) {
+        const count = parseInt(greatMatch[1]);
+        const type = greatMatch[2];
+        if (type.includes("Grandparent")) return -(count + 2);
+        if (type.includes("Grandchild")) return count + 2;
+      }
+      
+      return 0;
+    };
+
+    const getBirthYear = (m: AppMember): number => {
+      if (!m.birthDate) return 9999; // Put members without birth dates at the end
+      return new Date(m.birthDate).getFullYear();
+    };
+
+    // Sort members by generation (oldest ancestors first), then by birth year
+    const ordered = [...members].sort((a, b) => {
+      const depthA = getGenerationDepth(a.id);
+      const depthB = getGenerationDepth(b.id);
+      
+      // Sort by generation first (most negative = oldest ancestors)
+      if (depthA !== depthB) {
+        return depthA - depthB;
+      }
+      
+      // Within same generation, sort by birth year (oldest first)
+      return getBirthYear(a) - getBirthYear(b);
+    });
 
     const intro: PageData = {
       id: "intro",

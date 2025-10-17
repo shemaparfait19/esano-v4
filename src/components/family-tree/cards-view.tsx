@@ -23,12 +23,19 @@ export function CardsView({ members, edges, onViewMember }: CardsViewProps) {
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = members.filter(m => 
-        m.fullName?.toLowerCase().includes(query) ||
-        m.firstName?.toLowerCase().includes(query) ||
-        m.lastName?.toLowerCase().includes(query) ||
-        m.location?.toLowerCase().includes(query)
-      );
+      filtered = members.filter(m => {
+        const locationStr = typeof m.location === 'string' 
+          ? m.location 
+          : m.location 
+            ? `${m.location.village || ''} ${m.location.sector || ''} ${m.location.district || ''} ${m.location.province || ''}` 
+            : '';
+        return (
+          m.fullName?.toLowerCase().includes(query) ||
+          m.firstName?.toLowerCase().includes(query) ||
+          m.lastName?.toLowerCase().includes(query) ||
+          locationStr.toLowerCase().includes(query)
+        );
+      });
     }
     
     // Sort
@@ -159,7 +166,7 @@ export function CardsView({ members, edges, onViewMember }: CardsViewProps) {
                 {member.location && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4 flex-shrink-0" />
-                    <span className="truncate">{member.location}</span>
+                    <span className="truncate">{typeof member.location === 'string' ? member.location : `${member.location.village || ''}, ${member.location.sector || ''}, ${member.location.district || ''}`.replace(/, ,/g, ',').replace(/^, |, $/g, '')}</span>
                   </div>
                 )}
                 

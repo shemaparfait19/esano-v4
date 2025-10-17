@@ -113,7 +113,7 @@ export function TreeChartView({ members, edges, onViewMember }: TreeChartViewPro
                               <div>Died: {member.deathDate}</div>
                             )}
                             {member.location && (
-                              <div className="truncate">📍 {member.location}</div>
+                              <div className="truncate">📍 {typeof member.location === 'string' ? member.location : `${member.location.village || ''}, ${member.location.sector || ''}, ${member.location.district || ''}`.replace(/, ,/g, ',').replace(/^, |, $/g, '')}</div>
                             )}
                           </div>
                         </div>

@@ -123,7 +123,7 @@ export function TimelineView({ members, edges, onViewMember }: TimelineViewProps
                         {member.location && (
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="h-4 w-4" />
-                            <span>{member.location}</span>
+                            <span>{typeof member.location === 'string' ? member.location : `${member.location.village || ''}, ${member.location.sector || ''}, ${member.location.district || ''}`.replace(/, ,/g, ',').replace(/^, |, $/g, '')}</span>
                           </div>
                         )}
                         

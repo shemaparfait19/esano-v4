@@ -1016,18 +1016,16 @@ export default function FamilyTreePage() {
             />
           )}
 
-          {(!tree || (tree?.members?.length || 0) === 0) && !ownerIdParam && (
+          {!ownerIdParam && !userProfile?.familyTreeApproved && (
             <div className="flex-none border-b bg-white/60">
               <div className="px-4 py-6">
-                {!userProfile?.familyTreeApproved && (
-                  <FamilyTreeApplicationForm />
-                )}
+                <FamilyTreeApplicationForm />
               </div>
             </div>
           )}
 
-          {/* Tree viewport for approved users */}
-          {userProfile?.familyTreeApproved && (
+          {/* Tree viewport for approved users OR viewing own tree */}
+          {(userProfile?.familyTreeApproved || !ownerIdParam) && (
           <>
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             <div className="flex-1 relative" id="tree-viewport">

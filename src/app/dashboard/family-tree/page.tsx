@@ -73,6 +73,10 @@ import { AddMemberDialog } from "@/components/family-tree/add-member-dialog";
 import { AddRelationshipDialog } from "@/components/family-tree/add-relationship-dialog";
 import { ShareDialog } from "@/components/family-tree/share-dialog";
 import { TreeSwitcher } from "@/components/family-tree/tree-switcher";
+import { ViewModeToggle, ViewMode } from "@/components/family-tree/view-mode-toggle";
+import { TreeChartView } from "@/components/family-tree/tree-chart-view";
+import { TimelineView } from "@/components/family-tree/timeline-view";
+import { CardsView } from "@/components/family-tree/cards-view";
 
 export default function FamilyTreePage() {
   const { user, userProfile } = useAuth();
@@ -162,6 +166,7 @@ export default function FamilyTreePage() {
   });
   const [isEditMode, setIsEditMode] = useState(true);
   const [showViewResult, setShowViewResult] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   const [lastLoadTime, setLastLoadTime] = useState(0);
   const [suggestion, setSuggestion] = useState<string | null>(null);
@@ -1028,11 +1033,16 @@ export default function FamilyTreePage() {
             <div className="flex-1 relative" id="tree-viewport">
               {/* Status badge removed for simplified table UI */}
 
-              {/* Mode Toggle Controls */}
-              {/* Mode toggle removed for table UI */}
+              {/* View Mode Toggle */}
+              <div className="px-3 pt-3">
+                <ViewModeToggle
+                  currentMode={viewMode}
+                  onModeChange={setViewMode}
+                />
+              </div>
 
               <div className="w-full h-full flex flex-col gap-3 p-3 overflow-hidden">
-                {!readonly && (
+                {!readonly && viewMode === "table" && (
                   <GenerationForm
                     members={members as any}
                     onAdd={({ members: newMembers, edges: newEdges }) => {
@@ -1065,37 +1075,68 @@ export default function FamilyTreePage() {
                   />
                 )}
                 
-                {/* Advanced Search */}
-                <AdvancedSearch
-                  members={members as any}
-                  onSelectMember={(id) => setEditingNode(id)}
-                />
+                {/* Advanced Search - Show only in table view */}
+                {viewMode === "table" && (
+                  <AdvancedSearch
+                    members={members as any}
+                    onSelectMember={(id) => setEditingNode(id)}
+                  />
+                )}
                 
-                <MembersTable
-                  members={members as any}
-                  edges={edges as any}
-                  onOpen={(id) => setEditingNode(id)}
-                  onAiSuggest={handleAISuggestions}
-                  ownerId={ownerIdParam || user?.uid}
-                />
+                {/* Render different views based on selected mode */}
+                {viewMode === "table" && (
+                  <>
+                    <MembersTable
+                      members={members as any}
+                      edges={edges as any}
+                      onOpen={(id) => setEditingNode(id)}
+                      onAiSuggest={handleAISuggestions}
+                      ownerId={ownerIdParam || user?.uid}
+                    />
+                    
+                    {/* Relationships Table */}
+                    <div className="mt-6">
+                      <RelationshipsTable
+                        members={members as any}
+                        edges={edges as any}
+                        onRemoveEdge={(edgeId) => {
+                          console.log('➖ Removing edge from relationships table:', edgeId);
+                          removeEdge(edgeId);
+                          setDirty(true);
+                          setTimeout(() => {
+                            console.log('💾 Auto-saving after edge removal...');
+                            saveFamilyTree();
+                          }, 500);
+                        }}
+                        readonly={readonly}
+                      />
+                    </div>
+                  </>
+                )}
                 
-                {/* Relationships Table */}
-                <div className="mt-6">
-                  <RelationshipsTable
+                {viewMode === "tree" && (
+                  <TreeChartView
                     members={members as any}
                     edges={edges as any}
-                    onRemoveEdge={(edgeId) => {
-                      console.log('➖ Removing edge from relationships table:', edgeId);
-                      removeEdge(edgeId);
-                      setDirty(true);
-                      setTimeout(() => {
-                        console.log('💾 Auto-saving after edge removal...');
-                        saveFamilyTree();
-                      }, 500);
-                    }}
-                    readonly={readonly}
+                    onViewMember={(id) => setEditingNode(id)}
                   />
-                </div>
+                )}
+                
+                {viewMode === "timeline" && (
+                  <TimelineView
+                    members={members as any}
+                    edges={edges as any}
+                    onViewMember={(id) => setEditingNode(id)}
+                  />
+                )}
+                
+                {viewMode === "cards" && (
+                  <CardsView
+                    members={members as any}
+                    edges={edges as any}
+                    onViewMember={(id) => setEditingNode(id)}
+                  />
+                )}
                 <MemberDetailDrawer
                   open={!!editingNode}
                   onOpenChange={(o) => !o && setEditingNode(null)}

@@ -31,18 +31,27 @@ export function FamilyCodeGenerator({
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [familyName, setFamilyName] = useState<string>("");
   const [copiedRecently, setCopiedRecently] = useState(false);
+  const [savedSignupCode, setSavedSignupCode] = useState<string>("");
 
   // Auto-populate family name if available in user profile
   useEffect(() => {
     if (userProfile?.familyName && !familyName) {
       setFamilyName(userProfile.familyName);
     }
-    // Rehydrate last generated code from profile or localStorage
-    if (userProfile?.familyCode && !generatedCode) {
-      setGeneratedCode(userProfile.familyCode);
-    } else if (typeof window !== "undefined" && !generatedCode) {
+    // Check for saved family code from signup
+    if (userProfile?.familyCode) {
+      setSavedSignupCode(userProfile.familyCode);
+      // Also set it as the current code if no other code exists
+      if (!generatedCode) {
+        setGeneratedCode(userProfile.familyCode);
+      }
+    }
+    // Rehydrate last generated code from localStorage
+    if (!generatedCode && typeof window !== "undefined") {
       const cached = window.localStorage.getItem("familyCode:last");
-      if (cached) setGeneratedCode(cached);
+      if (cached && cached !== userProfile?.familyCode) {
+        setGeneratedCode(cached);
+      }
     }
   }, [userProfile, familyName]);
 
@@ -199,9 +208,45 @@ export function FamilyCodeGenerator({
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Show saved family code from signup */}
+        {savedSignupCode && (
+          <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg space-y-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-800">
+                Your Saved Family Code (from signup)
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-white p-3 rounded-md border border-blue-300">
+              <Badge className="font-mono text-lg px-4 py-2 bg-white border-blue-400 text-blue-900 flex-1 justify-center">
+                {savedSignupCode}
+              </Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(savedSignupCode);
+                  toast({
+                    title: "Copied!",
+                    description: "Family code copied to clipboard",
+                  });
+                }}
+                className="h-10"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <p className="text-xs text-blue-700">
+              This is the family code you entered during signup. You can use this or generate a new one below.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="familyName" className="text-sm font-medium">
-            Family Name
+            Family Name {savedSignupCode && "(for new code)"}
           </Label>
           <Input
             id="familyName"

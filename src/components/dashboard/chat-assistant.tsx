@@ -187,7 +187,7 @@ export function ChatAssistant() {
                 <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                 {message.provider && (
                   <div className="mt-2 pt-2 border-t border-border/50 text-xs text-muted-foreground flex items-center justify-between">
-                    <span>via {message.provider}</span>
+                    <span>via eSANO Assistant</span>
                     {message.elapsed && (
                       <span>{(message.elapsed / 1000).toFixed(2)}s</span>
                     )}

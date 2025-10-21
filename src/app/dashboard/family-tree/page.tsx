@@ -66,6 +66,8 @@ import { FamilyTreeApplicationForm } from "@/components/family-tree/application-
 import { FamilyTreeSuggestions } from "@/components/dashboard/family-tree-suggestions";
 import { FamilyCodeGenerator } from "@/components/family-tree/family-code-generator";
 import { GenerationManager } from "@/components/family-tree/generation-manager";
+import { FamilyHeadManager } from "@/components/family-tree/family-head-manager";
+import { SubfamilyManager } from "@/components/family-tree/subfamily-manager";
 import { MemberView } from "@/components/family-tree/member-view";
 import { cleanupOrphanedEdges } from "@/lib/cleanup-orphaned-edges";
 import { FamilyTreeToolbar } from "@/components/family-tree/family-tree-toolbar";
@@ -1239,6 +1241,28 @@ export default function FamilyTreePage() {
             </div>
             <div className="w-full lg:w-80 xl:w-96 border-t lg:border-t-0 lg:border-l bg-muted/20 p-3 space-y-4 overflow-auto">
               <FamilyCodeGenerator userProfile={userProfile} />
+              
+              {/* Family Hierarchy Section */}
+              {!readonly && (
+                <>
+                  <div className="border-t pt-4">
+                    <h3 className="text-lg font-semibold mb-3">Family Hierarchy</h3>
+                    <FamilyHeadManager />
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <GenerationManager />
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <SubfamilyManager 
+                      ownerId={ownerIdParam || user?.uid || ""} 
+                      members={members} 
+                      readonly={readonly}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
           

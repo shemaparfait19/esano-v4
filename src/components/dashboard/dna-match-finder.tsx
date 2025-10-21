@@ -75,8 +75,34 @@ export function DnaMatchFinder({ userId }: { userId: string }) {
       const list = Array.isArray(data.matches) ? data.matches : [];
       setMatches(list);
       updateStatuses(list.map((m: any) => m.userId));
-      // Do not persist matches automatically; keep results on this page only
-      if (!data.matches || data.matches.length === 0) {
+      
+      // Save matches to user profile for relatives page
+      if (list.length > 0) {
+        try {
+          const { doc, updateDoc } = await import("firebase/firestore");
+          const userDocRef = doc(db, "users", userId);
+          await updateDoc(userDocRef, {
+            "analysis.relatives": list.map((m: any) => ({
+              userId: m.userId,
+              relationshipProbability: m.confidence / 100,
+              predictedRelationship: "Match Found",
+              sharedCentimorgans: m.metrics?.totalIBD_cM || 0,
+            })),
+            updatedAt: new Date().toISOString(),
+          });
+          
+          toast({
+            title: "Matches found!",
+            description: `Found ${list.length} match${list.length > 1 ? 'es' : ''}. View them in the Relatives page.`,
+          });
+        } catch (err) {
+          console.error("Failed to save matches:", err);
+          toast({
+            title: "Matches found!",
+            description: `Found ${list.length} match${list.length > 1 ? 'es' : ''}.`,
+          });
+        }
+      } else {
         toast({
           title: "No matches found",
           description:
@@ -222,7 +248,7 @@ export function DnaMatchFinder({ userId }: { userId: string }) {
                     className="h-10 w-10 rounded-full object-cover"
                   />
                   <div className="font-medium">
-                    {m.displayName || m.userId} • {m.relationship} •{" "}
+                    {m.displayName || m.userId} • Match Found •{" "}
                     {Math.round(m.confidence)}%
                   </div>
                   <div className="text-xs text-muted-foreground">

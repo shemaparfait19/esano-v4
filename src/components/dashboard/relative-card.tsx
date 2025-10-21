@@ -44,9 +44,9 @@ export function RelativeCard({ relative }: RelativeCardProps) {
       <CardContent className="flex-grow space-y-4">
         <div className="space-y-1">
           <h3 className="font-semibold text-primary">
-            {relative.predictedRelationship || "Unknown Relationship"}
+            Match Found
           </h3>
-          <p className="text-sm text-muted-foreground">Confidence:</p>
+          <p className="text-sm text-muted-foreground">Match Percentage:</p>
           <div className="flex items-center gap-2">
             <Progress value={probabilityPercent} className="h-2" />
             <span className="text-xs font-medium text-muted-foreground">

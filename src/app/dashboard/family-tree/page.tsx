@@ -1246,12 +1246,10 @@ export default function FamilyTreePage() {
               {!readonly && (
                 <>
                   <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-3">Family Hierarchy</h3>
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      👑 Family Hierarchy
+                    </h3>
                     <FamilyHeadManager />
-                  </div>
-                  
-                  <div className="border-t pt-4">
-                    <GenerationManager />
                   </div>
                   
                   <div className="border-t pt-4">

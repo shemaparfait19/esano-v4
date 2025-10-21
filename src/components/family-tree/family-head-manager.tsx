@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 export function FamilyHeadManager() {
   const members = useFamilyTreeStore(selectMembers);
   const updateMember = useFamilyTreeStore((state) => state.updateMember);
+  const setDirty = useFamilyTreeStore((state) => state.setDirty);
   
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
@@ -68,6 +69,9 @@ export function FamilyHeadManager() {
         isHeadOfFamily: true
       });
 
+      // Trigger save
+      setDirty(true);
+
       toast({
         title: "Main Family Head Updated",
         description: `${newHead.fullName} is now the Main Family Head`,
@@ -85,6 +89,9 @@ export function FamilyHeadManager() {
       ...currentHead,
       isHeadOfFamily: false
     });
+
+    // Trigger save
+    setDirty(true);
 
     toast({
       title: "Main Family Head Removed",

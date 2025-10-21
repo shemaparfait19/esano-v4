@@ -1239,7 +1239,7 @@ export default function FamilyTreePage() {
                 </div>
               )}
             </div>
-            <div className="w-full lg:w-80 xl:w-96 border-t lg:border-t-0 lg:border-l bg-muted/20 p-3 space-y-4 overflow-auto">
+            <div className="w-full lg:w-96 xl:w-[28rem] 2xl:w-[32rem] border-t lg:border-t-0 lg:border-l bg-muted/20 p-3 space-y-4 overflow-auto max-h-[calc(100vh-12rem)]">
               <FamilyCodeGenerator userProfile={userProfile} />
               
               {/* Family Hierarchy Section */}

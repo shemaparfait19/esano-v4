@@ -89,6 +89,16 @@ export function GenerationForm({
         });
         return;
       }
+
+      // Validate spouse is not a parent
+      if (row.spouseId && row.parentIds?.includes(row.spouseId)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Relationship",
+          description: `Member ${i + 1}: Spouse cannot be a parent. Please check your selections.`,
+        });
+        return;
+      }
     }
 
     const newMembers = rows
@@ -346,7 +356,7 @@ export function GenerationForm({
                     }
                     disabled={readonly}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={row.spouseId && row.parentIds?.includes(row.spouseId) ? "border-destructive" : ""}>
                       <SelectValue placeholder="Select spouse" />
                     </SelectTrigger>
                     <SelectContent>
@@ -357,6 +367,13 @@ export function GenerationForm({
                       ))}
                     </SelectContent>
                   </Select>
+                  {row.spouseId && row.parentIds?.includes(row.spouseId) && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Warning: Spouse cannot be a parent!
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Marital partner (not a parent)</p>
                 </div>
                 <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                   <Label className="text-sm">Parents</Label>

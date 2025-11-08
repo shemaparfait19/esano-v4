@@ -2,22 +2,23 @@
 
 ## Issues Found During Defense
 
-### ❌ Issue 1: Spouse Relationship Bug
-**Problem:** When setting a parent relationship, the system incorrectly creates spouse relationships. For example, when adding a child and assigning parents, the child's mother becomes the father's spouse automatically, which creates incorrect family connections.
+### ✅ Issue 1: Spouse Relationship Bug - FIXED!
+**Problem:** When adding a child and assigning parents, users were accidentally also selecting a parent as the spouse, creating incestuous relationships (e.g., child's mother listed as child's spouse).
 
-**Root Cause:** The relationship inference engine was creating spouse edges between parents of the same child without proper validation.
+**Root Cause:** USER ERROR - The form has "Spouse" and "Parents" fields close together. Users were selecting the same person in both fields without realizing the difference.
 
-**Status:** ⚠️ NEEDS INVESTIGATION
-- Location: `src/lib/relationship-inference-engine.ts`
-- The inference engine infers relationships but doesn't CREATE edges
-- The actual bug is likely in the UI where parent selection happens
-- Need to check: `generation-form.tsx`, `node-editor.tsx`, `add-member-dialog.tsx`
+**Status:** ✅ FIXED
+- Added validation to prevent selecting a parent as spouse
+- Added visual warning (red border + alert icon) when conflict detected
+- Added helper text: "Marital partner (not a parent)"
+- Form now blocks submission with clear error message
 
-**Solution Approach:**
-1. Parent relationships should ONLY create parent-child edges
-2. Spouse relationships must be explicitly set by the user
-3. Never auto-create spouse edges based on shared children
-4. Add validation to prevent circular relationships
+**Solution Implemented:**
+1. ✅ Validation on submit - rejects if spouse is also a parent
+2. ✅ Real-time visual warning - red border on spouse dropdown
+3. ✅ Alert icon with message: "Warning: Spouse cannot be a parent!"
+4. ✅ Helper text to clarify field purpose
+5. ✅ Clear error toast on submit attempt
 
 ---
 

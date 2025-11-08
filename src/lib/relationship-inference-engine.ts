@@ -161,9 +161,10 @@ export class RelationshipInferenceEngine {
         });
       }
 
-      // Spouses
+      // Spouses - ONLY add if it's a direct spouse relationship (not through traversal)
       const spouses = this.spousesOf.get(current.id);
-      if (spouses) {
+      if (spouses && current.id === memberId) {
+        // Only process spouses of the original member, not spouses discovered through traversal
         spouses.forEach((spouseId) => {
           if (!visited.has(spouseId)) {
             visited.add(spouseId);
@@ -175,7 +176,7 @@ export class RelationshipInferenceEngine {
               type: "spouse",
               path: newPath,
               distance: 0,
-              isDirect: current.id === memberId,
+              isDirect: true,
               description: "Spouse",
             });
 

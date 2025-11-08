@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { FamilyMember, FamilyEdge } from "@/types/family-tree";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,13 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Wrench } from "lucide-react";
 import { RelationshipInferenceEngine } from "@/lib/relationship-inference-engine";
+import { useToast } from "@/hooks/use-toast";
 
 interface RelationshipsTableProps {
   members: FamilyMember[];
   edges: FamilyEdge[];
   onRemoveEdge: (edgeId: string) => void;
+  onAddEdge?: (edge: { fromId: string; toId: string; type: string }) => void;
   readonly?: boolean;
 }
 
@@ -25,13 +27,76 @@ export function RelationshipsTable({
   members,
   edges,
   onRemoveEdge,
+  onAddEdge,
   readonly = false,
 }: RelationshipsTableProps) {
+  const { toast } = useToast();
+  const [isFixing, setIsFixing] = useState(false);
+
   // Initialize relationship inference engine
   const relationshipEngine = useMemo(() => {
     if (members.length === 0) return null;
     return new RelationshipInferenceEngine(members, edges);
   }, [members, edges]);
+
+  // Auto-detect and fix missing parent edges
+  const handleFixDataIssues = () => {
+    setIsFixing(true);
+    let fixCount = 0;
+
+    // Find children with only 1 parent where the other parent can be inferred from spouse
+    members.forEach((child) => {
+      const parents = edges.filter(e => e.type === "parent" && e.toId === child.id);
+      
+      if (parents.length === 1) {
+        const singleParent = members.find(m => m.id === parents[0].fromId);
+        if (!singleParent) return;
+        
+        // Find the spouse of this parent
+        const spouseEdge = edges.find(e => 
+          e.type === "spouse" && 
+          (e.fromId === singleParent.id || e.toId === singleParent.id)
+        );
+        
+        if (spouseEdge) {
+          const spouseId = spouseEdge.fromId === singleParent.id 
+            ? spouseEdge.toId 
+            : spouseEdge.fromId;
+          
+          // Check if this spouse is already a parent
+          const alreadyParent = edges.some(e => 
+            e.type === "parent" && 
+            e.fromId === spouseId && 
+            e.toId === child.id
+          );
+          
+          if (!alreadyParent && onAddEdge) {
+            // Add the missing parent edge
+            onAddEdge({
+              fromId: spouseId,
+              toId: child.id,
+              type: "parent"
+            });
+            fixCount++;
+          }
+        }
+      }
+    });
+
+    setIsFixing(false);
+
+    if (fixCount > 0) {
+      toast({
+        title: "Data Fixed!",
+        description: `Added ${fixCount} missing parent relationship(s)`,
+      });
+    } else {
+      toast({
+        title: "No Issues Found",
+        description: "All relationships look good!",
+      });
+    }
+  };
 
   const getMemberName = (id: string) => {
     const member = members.find((m) => m.id === id);
@@ -116,8 +181,22 @@ export function RelationshipsTable({
             Direct relationships and AI-inferred connections
           </p>
         </div>
-        <div className="text-sm text-muted-foreground">
-          {edges.length} direct · {allRelationships.length - edges.length} inferred
+        <div className="flex items-center gap-3">
+          {!readonly && onAddEdge && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleFixDataIssues}
+              disabled={isFixing}
+              className="gap-2"
+            >
+              <Wrench className="h-4 w-4" />
+              {isFixing ? "Fixing..." : "Fix Data Issues"}
+            </Button>
+          )}
+          <div className="text-sm text-muted-foreground">
+            {edges.length} direct · {allRelationships.length - edges.length} inferred
+          </div>
         </div>
       </div>
 

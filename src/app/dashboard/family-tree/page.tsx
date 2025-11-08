@@ -1174,6 +1174,19 @@ export default function FamilyTreePage() {
                             saveFamilyTree();
                           }, 500);
                         }}
+                        onAddEdge={(edge) => {
+                          console.log('➕ Adding edge from Fix Data Issues:', edge);
+                          addEdge({
+                            fromId: edge.fromId,
+                            toId: edge.toId,
+                            type: edge.type as any,
+                          });
+                          setDirty(true);
+                          setTimeout(() => {
+                            console.log('💾 Auto-saving after edge addition...');
+                            saveFamilyTree();
+                          }, 500);
+                        }}
                         readonly={readonly}
                       />
                     </div>

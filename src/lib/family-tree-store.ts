@@ -210,6 +210,22 @@ export const useFamilyTreeStore = create<FamilyTreeState>()(
     },
 
     addEdge: (edgeData) => {
+      // Validate: prevent spouse edge if one is parent of the other
+      if (edgeData.type === "spouse") {
+        const state = get();
+        const isParentChild = state.edges.some(
+          (e) =>
+            e.type === "parent" &&
+            ((e.fromId === edgeData.fromId && e.toId === edgeData.toId) ||
+             (e.fromId === edgeData.toId && e.toId === edgeData.fromId))
+        );
+        
+        if (isParentChild) {
+          console.error("❌ Blocked spouse edge: One person is parent of the other");
+          return; // Don't add the edge
+        }
+      }
+
       const newEdge: FamilyEdge = {
         ...edgeData,
         id: `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

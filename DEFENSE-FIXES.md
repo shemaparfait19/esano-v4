@@ -14,11 +14,13 @@
 - Form now blocks submission with clear error message
 
 **Solution Implemented:**
-1. ✅ Validation on submit - rejects if spouse is also a parent
-2. ✅ Real-time visual warning - red border on spouse dropdown
-3. ✅ Alert icon with message: "Warning: Spouse cannot be a parent!"
-4. ✅ Helper text to clarify field purpose
-5. ✅ Clear error toast on submit attempt
+1. ✅ **Auto-cleanup on load** - Automatically removes invalid spouse edges when tree loads
+2. ✅ **Store-level validation** - Blocks spouse edges between parent/child at data layer
+3. ✅ **Form validation** - Rejects if spouse is also a parent on submit
+4. ✅ **Real-time visual warning** - Red border on spouse dropdown
+5. ✅ **Alert icon** with message: "Warning: Spouse cannot be a parent!"
+6. ✅ **Helper text** to clarify field purpose
+7. ✅ **Toast notification** when bad data is auto-cleaned
 
 ---
 

@@ -567,6 +567,52 @@ export default function FamilyTreePage() {
         }
       }
 
+      // Auto-cleanup: Remove invalid spouse edges (spouse cannot be parent/child)
+      if (data.tree.edges && data.tree.edges.length > 0) {
+        const invalidEdges: string[] = [];
+        const cleanedEdges = data.tree.edges.filter((edge: any) => {
+          if (edge.type === "spouse") {
+            // Check if these two people have a parent-child relationship
+            const isParentChild = data.tree.edges.some((e: any) => 
+              e.type === "parent" &&
+              ((e.fromId === edge.fromId && e.toId === edge.toId) ||
+               (e.fromId === edge.toId && e.toId === edge.fromId))
+            );
+            
+            if (isParentChild) {
+              invalidEdges.push(edge.id);
+              console.warn(`🧹 Auto-removed invalid spouse edge: ${edge.fromId} ↔ ${edge.toId} (parent-child conflict)`);
+              return false; // Remove this edge
+            }
+          }
+          return true; // Keep this edge
+        });
+
+        if (invalidEdges.length > 0) {
+          data.tree.edges = cleanedEdges;
+          console.log(`✅ Cleaned ${invalidEdges.length} invalid relationship(s)`);
+          
+          // Auto-save the cleaned tree
+          try {
+            await fetch("/api/family-tree", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ 
+                userId: ownerIdParam || user.uid, 
+                tree: data.tree 
+              }),
+            });
+            
+            toast({
+              title: "Data Cleaned",
+              description: `Removed ${invalidEdges.length} invalid relationship(s) automatically`,
+            });
+          } catch (err) {
+            console.error("Failed to save cleaned tree:", err);
+          }
+        }
+      }
+
       setTree(data.tree);
 
       if (ownerIdParam && user?.uid) {

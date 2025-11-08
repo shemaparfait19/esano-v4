@@ -16,6 +16,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { LocationSelector } from "./location-selector";
+import { validateDates, getMaxDate, getMinDate } from "@/lib/date-validation";
+import { AlertCircle } from "lucide-react";
 
 interface GenerationFormProps {
   members: FamilyMember[];
@@ -73,6 +75,22 @@ export function GenerationForm({
   };
 
   const handleSubmit = () => {
+    // Validate dates first
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row.firstName && !row.lastName) continue; // Skip empty rows
+      
+      const validation = validateDates(row.birthDate, row.deathDate);
+      if (!validation.isValid) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Date",
+          description: `Member ${i + 1}: ${validation.error}`,
+        });
+        return;
+      }
+    }
+
     const newMembers = rows
       .map((r) => ({
         id: `member_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -242,8 +260,11 @@ export function GenerationForm({
                     onChange={(e) =>
                       handleChange(idx, "birthDate", e.target.value)
                     }
+                    min={getMinDate()}
+                    max={getMaxDate()}
                     disabled={readonly}
                   />
+                  <p className="text-xs text-muted-foreground">Must be between 1800 and today</p>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm">Death Date (if applicable)</Label>
@@ -253,8 +274,11 @@ export function GenerationForm({
                     onChange={(e) =>
                       handleChange(idx, "deathDate", e.target.value)
                     }
+                    min={row.birthDate || getMinDate()}
+                    max={getMaxDate()}
                     disabled={readonly}
                   />
+                  <p className="text-xs text-muted-foreground">Must be after birth date</p>
                 </div>
               </div>
             </div>

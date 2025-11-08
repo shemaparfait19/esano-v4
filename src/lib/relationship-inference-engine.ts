@@ -183,6 +183,37 @@ export class RelationshipInferenceEngine {
             queue.push({ id: spouseId, path: newPath, distance: 0 });
           }
         });
+      } else if (spouses && current.distance !== 0) {
+        // If we reached someone's spouse through parent/child traversal,
+        // infer them as step-parent or parent (co-parent)
+        spouses.forEach((spouseId) => {
+          if (!visited.has(spouseId)) {
+            visited.add(spouseId);
+            const newPath = [...current.path, spouseId];
+            
+            // If current is a parent (distance -1), spouse is also a parent
+            if (current.distance < 0) {
+              this.inferAncestorRelationship(
+                memberId,
+                spouseId,
+                newPath,
+                current.distance // Same distance as the parent
+              );
+            }
+            // If current is a child (distance +1), spouse is step-parent
+            else if (current.distance > 0) {
+              this.inferDescendantRelationship(
+                memberId,
+                spouseId,
+                newPath,
+                current.distance // Same distance as the child
+              );
+            }
+            
+            // Continue traversal from spouse
+            queue.push({ id: spouseId, path: newPath, distance: current.distance });
+          }
+        });
       }
     }
 
